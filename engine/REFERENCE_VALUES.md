@@ -252,3 +252,35 @@ Written by the Partner session, Friday 2026-11-13, about 21:10 CST. README Phase
 **Limits:** EDT can read longer than T20 at some seats (strong late energy, coupled spaces). The 1.3× margin and the every-band check guard against that; in our data the largest EDT over-read was +9 % at the 90th percentile. The page shows the EDT values and says "lower confidence" and "can only say likely over, never under".
 
 **Live-site check (Saturday 11:50, headless Chrome, https://kniggukniggu-droid.github.io/echo-check/app/, 3 ACE takes × processing off/on):** every result page finished rendering. Lecture Room 2 position 2 (ACE 1.67 s), processing off: "Likely over the limit" from EDT 1.50 s (before the rescue: Incomplete). An under-limit room stayed "Under the limit (weak evidence)". An Incomplete room with EDT 0.36 s stayed Incomplete. All processing-on runs: Blocked.
+
+## 10. Realistic clap level and a clap-detector fix (Saturday 12:20 CST)
+
+**Why:** the literature review (`research/LOW_INR_METHODS.md` §1) found that our "normal" clap of 80 dB was probably 12–16 dB too low. A forceful cupped clap is about 92–96 dB as a 10 ms level at 1 m (de Vos, Papadakis & Stavroulakis 2020, Table 2: 87.9–89.5 dB(A) at 0.6 m over 125 ms, converted). §7 and §8 were rerun with claps of **86 / 92 / 98 dB**, reusing the same simulated and measured responses.
+
+**Bug found and fixed in the clap detector:** far from the clapper in an echoey room, the sound keeps building up for 30–50 ms after the direct sound, as reflections add up. The detector required a 15 dB rise within the 20 ms before the peak. It therefore missed loud, clear claps: 16 of 17 back-seat failures in the simulation, and one PAN-AR classroom position at every clap level. **Fix:** a 15 dB rise within the 100 ms before the peak (`detectClaps`). Friday's real takes are unchanged (same claps, same 0.41 s). 22 of 22 tests pass.
+
+**Effect of the fix on every dataset (JS engine; before → after):**
+
+| Dataset | Takes | No verdict | False passes | Early-decay rescues (any not truly over?) | Median T20 error (verdicts) | Existing verdicts that changed |
+|---|---|---|---|---|---|---|
+| Simulated classrooms, claps 74/80/86 dB | 1,053 | 566 → 444 | 2 → 2 | 276 (0) | 1.0 % (333) | 0 |
+| Simulated classrooms, claps 86/92/98 dB | 1,053 | 275 → 77 | 2 → 2 | 124 (0) | 0.9 % (852) | 0 |
+| Real classrooms (HOMULA, PAN-AR), claps 74/80/86 dB | 540 | 455 → 447 | 0 → 0 | 29 (0) | 0.9 % (64) | 0 |
+| Real classrooms, claps 86/92/98 dB | 540 | 278 → 269 | 0 → 0 | 14 (0) | 1.0 % (257) | 0 |
+| ACE takes (processing off) | 14 | 2 → 2 | 0 → 0 | 1 (0) | 3.2 % (11) | 0 |
+| MIT harsh / back-row-like | 102 / 102 | 35 → 35 / 2 → 2 | 0 → 0 | 10 (0) / 0 | 2.0 % / 5.9 % | 0 |
+
+**Current picture (fixed engine, realistic clap):**
+
+| Where (verdicts, including early-decay "Likely over") | Clap | 35 dBA (ventilation off) | 45 dBA (ventilation on, typical) | 50 dBA |
+|---|---|---|---|---|
+| Simulated, middle seat | normal 92 dB / loud 98 dB | verdict in 39 / 39 of 39 | 39 / 39 | 35 / 39 |
+| Simulated, back seat (6–9 m) | normal / loud | 39 / 39 | 37 / 39 | 30 / 36 |
+| Real seminar room HOMULA (25 seats × 2 sources), normal 92 dB | rows 1–3 (3.5–6.5 m) | 30 of 30 | 12 of 30 (row 1: 9 of 10; row 2: 3 of 10; row 3: 0) | — |
+| | rows 4–5 (8–10 m) | 16 of 20 | 0 of 20 | — |
+| Real PAN-AR classroom, normal 92 dB | 5 positions | 5 of 5 | 5 of 5 | 5 of 5 (4 from the early decay) |
+
+- **False passes: 0 in 1,080 real-room takes (§8 + §10). 2 in the simulation, both at a seat 1.8 m from the clapper** (excluded by the 3–5 m setup advice).
+- **When a verdict is given, the median error is about 1 %** against pyrato on the same responses (90th percentile 2–7 %).
+- **HOMULA is harsher than a real clap:** its loudspeakers are directional, so the direct sound is stronger relative to the echo.
+- **Reading:** with a loud cupped clap and the ventilation paused, a verdict is likely from most seats. With the ventilation running (about 44 dBA in US rooms, `research/CLASSROOM_FIELD_DATA.md`), seats about 3–5 m from the clapper work best. **The clap level is still literature-based, not measured by us;** a real classroom take is the remaining check.

@@ -252,7 +252,12 @@ export function detectClaps(x, fs, [t0, t1] = DEFAULTS.clapWindowS) {
   for (const p of findPeaks(Lf, base + 25, 1000)) {
     const t = p / 1000;
     if (t < t0 || t > t1) continue;
-    if (Lf[p] - Lf[Math.max(0, p - 20)] < 15) continue; // impulsive: >= 15 dB rise in 20 ms
+    // Impulsive: >= 15 dB rise within the 100 ms before the envelope peak. Far from the clapper in an echoey
+    // room the envelope keeps rising for 30-50 ms after the direct sound (reflections add up), so the old
+    // 20 ms test missed real claps (engine/REFERENCE_VALUES.md §10: a PAN-AR classroom position, back seats).
+    let lo = Infinity;
+    for (let k = Math.max(0, p - 100); k < p; k++) if (Lf[k] < lo) lo = Lf[k];
+    if (Lf[p] - lo < 15) continue;
     const a = Math.trunc((t - 0.01) * fs), b = Math.trunc((t + 0.01) * fs);
     let best = a;
     for (let i = a; i < b; i++) if (Math.abs(y[i]) > Math.abs(y[best])) best = i;
