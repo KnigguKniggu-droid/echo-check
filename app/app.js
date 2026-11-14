@@ -51,7 +51,7 @@ $('print').addEventListener('click', () => window.print());
 
 // ---------- recording ----------
 const DURATION_S = 45;
-const PHASES = [[0, 'Walk to the front quietly'], [9, 'Get ready to clap'], [10, 'Clap 4 times, 3 s apart'], [24, 'Stay quiet'], [30, 'Count slowly from 1 to 20'], [41, 'Stay quiet. Finishing']];
+const PHASES = [[0, 'Walk to the front quietly'], [9, 'Get ready to clap'], [10, 'Clap 4 times, 3 s apart: cupped hands, loud'], [24, 'Stay quiet'], [30, 'Count slowly from 1 to 20'], [41, 'Stay quiet. Finishing']];
 const WORKLET = "class Rec extends AudioWorkletProcessor{process(i){const c=i[0]&&i[0][0];if(c&&c.length)this.port.postMessage(c.slice(0));return true}}registerProcessor('rec',Rec);";
 let rec = null;
 
