@@ -335,6 +335,7 @@ $('dl-json').addEventListener('click', () => {
   const out = { tool: 'Echo Check+', savedAt: new Date().toISOString(), startedAt: ctx.startedAt || null, source: ctx.source,
     room: { units, length: parseFloat($('len').value) || null, width: parseFloat($('wid').value) || null, height: parseFloat($('hei').value) || null, volumeFt3: volumeFt3() },
     microphone: ctx.microphone || null, captureMethod: ctx.captureMethod || null, sampleRate: ctx.audio ? ctx.audio.fs : null, userAgent: navigator.userAgent,
+    ventilation: $('hvac') ? $('hvac').value : null,
     reported: ctx.reported || null, tabHidden: !!ctx.tabHidden, assessment, clapTimesS: res.clapTimesS, claps: res.claps, speechMarginDb: res.speechMarginDb };
   saveBlob(new Blob([JSON.stringify(out, null, 1)], { type: 'application/json' }), `echo-check_${stamp()}.json`);
 });
