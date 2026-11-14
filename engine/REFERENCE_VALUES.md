@@ -198,7 +198,9 @@ Written by the Partner session, Friday 2026-11-13, about 21:10 CST. README Phase
 
 **Reading:** in an empty room with little scattering, a room with all its absorption on the ceiling can measure much longer than a Sabine calculator predicts (sound keeps bouncing between hard walls). With furniture-like scattering (0.3–0.5), the calculator and the measurement roughly agree. **Do not claim that calculators are wrong**; say that the result depends on the furniture and the layout, which a measurement includes and a formula does not.
 
-## 8. Real classrooms: measured impulse responses (HOMULA-RIR and PAN-AR; Saturday 11:30 CST)
+## 8. Simulated claps in 3 measured rooms (HOMULA-RIR and PAN-AR; Saturday 11:30 CST)
+
+**Scope (corrected 12:35):** the real part is **60 measured impulse responses from 3 rooms** (loudspeaker measurements by two universities). The claps and the background noise are **our simulation**, added at 9 loudness settings (540 test files per run). Nobody clapped in these rooms. **All 3 rooms are over the limit**, so this section cannot show how the engine handles rooms that pass (§4 ACE and §6 MIT cover under-limit rooms).
 
 **What was run:** `tools/real_classroom_test.py` on measured responses from two universities. The same clap and background model as §7; each response is scaled so its direct sound matches a point source at the stated distance (checked on simulated responses: within about 2 dB). **Loudspeakers are directional, so this is harsher than a hand clap** (stronger direct sound).
 - **HOMULA-RIR** (Politecnico di Milano, 2024; Zenodo 10479726, **CC BY 4.0**, MD5 matched): a furnished seminar room used for lessons, 268 m³ (9,464 ft³, limit 0.6 s). 2 loudspeakers at the front, **25 seats in 5 rows, 3.5 to 9.7 m from the front**. 50 responses.
@@ -214,7 +216,7 @@ Written by the Partner session, Friday 2026-11-13, about 21:10 CST. README Phase
 **HOMULA by row (normal clap, 35 dBA): row 1 (3.5 m) 7 of 10 verdicts; row 2 (5.0 m) 1 of 10; rows 3–5 (6.5–9.7 m) 0 of 10.** At 45 dBA: no verdicts in HOMULA or the PAN-AR classroom.
 
 **Reading:**
-- **0 false passes in 540 takes in real rooms. When a verdict is given, it is accurate (median error 0.6–4.3 %).**
+- **0 false passes in 540 test files (simulated claps in 60 measured responses from 3 over-limit rooms). When a verdict is given, it is accurate (median error 0.6–4.3 %).**
 - **All three rooms are over the limit,** so this test shows that the engine does not pass an over-limit room. It cannot check under-limit rooms (§4 and §6 do).
 - **Distance matters most:** a seat 3.5 m from the clapper gives a verdict in most takes; seats 6.5 m or more away rarely do, with our assumed clap level.
 
@@ -240,7 +242,7 @@ Written by the Partner session, Friday 2026-11-13, about 21:10 CST. README Phase
 | Dataset | No verdict | Rescued by EDT | Rescued rooms that are really over the limit | Rescued rooms that are close or under | False passes | Other verdicts changed |
 |---|---|---|---|---|---|---|
 | Simulated classrooms (§7) | 777 → 566 of 1,053 | 211 | 211 | **0** | 2 → 2 | 0 |
-| Real classrooms (§8) | 482 → 455 of 540 | 27 | 27 | **0** | 0 → 0 | 0 |
+| Simulated claps in 3 measured rooms (§8) | 482 → 455 of 540 | 27 | 27 | **0** | 0 → 0 | 0 |
 | ACE browser takes (§5, processing off) | 3 → 2 of 14 | 1 (Lecture Room 2, 1.67 s) | 1 | **0** | 0 | 0 |
 | MIT harsh setup (§6), now run through the JS engine | 45 → 35 of 102 | 10 | 10 | **0** | 0 | 0 |
 | MIT back-row-like setup (§6) | 2 of 102 | 0 | — | — | 0 | 0 |
@@ -265,8 +267,8 @@ Written by the Partner session, Friday 2026-11-13, about 21:10 CST. README Phase
 |---|---|---|---|---|---|---|
 | Simulated classrooms, claps 74/80/86 dB | 1,053 | 566 → 444 | 2 → 2 | 276 (0) | 1.0 % (333) | 0 |
 | Simulated classrooms, claps 86/92/98 dB | 1,053 | 275 → 77 | 2 → 2 | 124 (0) | 0.9 % (852) | 0 |
-| Real classrooms (HOMULA, PAN-AR), claps 74/80/86 dB | 540 | 455 → 447 | 0 → 0 | 29 (0) | 0.9 % (64) | 0 |
-| Real classrooms, claps 86/92/98 dB | 540 | 278 → 269 | 0 → 0 | 14 (0) | 1.0 % (257) | 0 |
+| Simulated claps in 3 measured rooms (HOMULA, PAN-AR), claps 74/80/86 dB | 540 | 455 → 447 | 0 → 0 | 29 (0) | 0.9 % (64) | 0 |
+| Simulated claps in 3 measured rooms, claps 86/92/98 dB | 540 | 278 → 269 | 0 → 0 | 14 (0) | 1.0 % (257) | 0 |
 | ACE takes (processing off) | 14 | 2 → 2 | 0 → 0 | 1 (0) | 3.2 % (11) | 0 |
 | MIT harsh / back-row-like | 102 / 102 | 35 → 35 / 2 → 2 | 0 → 0 | 10 (0) / 0 | 2.0 % / 5.9 % | 0 |
 
@@ -276,11 +278,11 @@ Written by the Partner session, Friday 2026-11-13, about 21:10 CST. README Phase
 |---|---|---|---|---|
 | Simulated, middle seat | normal 92 dB / loud 98 dB | verdict in 39 / 39 of 39 | 39 / 39 | 35 / 39 |
 | Simulated, back seat (6–9 m) | normal / loud | 39 / 39 | 37 / 39 | 30 / 36 |
-| Real seminar room HOMULA (25 seats × 2 sources), normal 92 dB | rows 1–3 (3.5–6.5 m) | 30 of 30 | 12 of 30 (row 1: 9 of 10; row 2: 3 of 10; row 3: 0) | — |
+| Measured seminar room HOMULA (25 seats × 2 sources; simulated claps), normal 92 dB | rows 1–3 (3.5–6.5 m) | 30 of 30 | 12 of 30 (row 1: 9 of 10; row 2: 3 of 10; row 3: 0) | — |
 | | rows 4–5 (8–10 m) | 16 of 20 | 0 of 20 | — |
-| Real PAN-AR classroom, normal 92 dB | 5 positions | 5 of 5 | 5 of 5 | 5 of 5 (4 from the early decay) |
+| Measured PAN-AR classroom (simulated claps), normal 92 dB | 5 positions | 5 of 5 | 5 of 5 | 5 of 5 (4 from the early decay) |
 
-- **False passes: 0 in 1,080 real-room takes (§8 + §10). 2 in the simulation, both at a seat 1.8 m from the clapper** (excluded by the 3–5 m setup advice).
+- **False passes: 0 in 1,080 test files built from 60 measured responses of 3 over-limit rooms (simulated claps and noise; §8 + §10). 2 in the simulated rooms, both at a seat 1.8 m from the clapper** (excluded by the 3–5 m setup advice). **None of the 3 measured rooms is under the limit.**
 - **When a verdict is given, the median error is about 1 %** against pyrato on the same responses (90th percentile 2–7 %).
 - **HOMULA is harsher than a real clap:** its loudspeakers are directional, so the direct sound is stronger relative to the echo.
 - **Reading:** with a loud cupped clap and the ventilation paused, a verdict is likely from most seats. With the ventilation running (about 44 dBA in US rooms, `research/CLASSROOM_FIELD_DATA.md`), seats about 3–5 m from the clapper work best. **The clap level is still literature-based, not measured by us;** a real classroom take is the remaining check.
