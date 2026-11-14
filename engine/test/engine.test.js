@@ -87,6 +87,17 @@ test('limit and decision rules', () => {
   assert.equal(E.decide(0.50, 0.6), 'Under the limit (weak evidence)');
 });
 
+test('Incomplete says why: claps too quiet, or no claps at all', () => {
+  const quiet = synth({ T60: 0.6, amp: 0.5, noiseDb: -33, seed: 5 });
+  const a = E.assess(E.analyse(quiet.x, quiet.fs), { volumeFt3: 8000, reported: NO_PROCESSING });
+  assert.equal(a.verdict, 'Incomplete');
+  assert.ok(a.reasons.some((m) => m.startsWith('The claps were too quiet above the background')), a.reasons.join(' | '));
+  const none = synth({ T60: 0.6, amp: 0.5, noiseDb: -33, seed: 5, claps: [] });
+  const b = E.assess(E.analyse(none.x, none.fs), { volumeFt3: 8000, reported: NO_PROCESSING });
+  assert.equal(b.verdict, 'Incomplete');
+  assert.ok(b.reasons.some((m) => m.startsWith('No claps were heard clearly')), b.reasons.join(' | '));
+});
+
 test('too little clean decay gives Incomplete, not a verdict', () => {
   const { fs, x } = synth({ T60: 0.6, amp: 0.5, noiseDb: -33, seed: 5 });
   const res = E.analyse(x, fs);

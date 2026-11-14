@@ -494,6 +494,14 @@ export function assess(result, ctx = {}, opts = {}) {
     const missing = BANDS.filter((fc) => bandT20[fc] === null);
     const loudButShort = missing.filter((fc) => usable.filter((c) => c.bands[fc].cleanDecayDb >= o.cleanMinDb && !c.bands[fc].T20).length >= 2);
     reasons.push(`Not enough clean claps in the ${missing.join(' and ')} Hz band${missing.length > 1 ? 's' : ''} (need ${o.minClapsPerBand} per band with ${o.cleanMinDb} dB of clean decay).`);
+    // Too quiet: the claps did not rise far enough above the background at this seat (simulated and real
+    // classrooms, engine/REFERENCE_VALUES.md §7-§8: the main cause of "Incomplete" at back seats and above 35 dBA).
+    const weak = missing.filter((fc) => !loudButShort.includes(fc));
+    if (!result.claps.length) reasons.push('No claps were heard clearly above the background noise. Make the room quieter (switch off fans and the projector, and the ventilation if you are allowed to), clap louder with cupped hands, or test a seat closer to the front (about 3 to 5 m, 10 to 16 ft, from where you clap).');
+    else if (weak.length) {
+      const best = Math.max(...weak.flatMap((fc) => result.claps.map((c) => c.bands[fc].cleanDecayDb).filter((v) => Number.isFinite(v))));
+      reasons.push(`The claps were too quiet above the background at this seat${Number.isFinite(best) ? ` (best ${Math.round(best)} dB, need ${o.cleanMinDb} dB)` : ''}. Make the room quieter (switch off fans and the projector, and the ventilation if you are allowed to), clap louder with cupped hands, or test a seat closer to the front (about 3 to 5 m, 10 to 16 ft, from where you clap).`);
+    }
     if (loudButShort.length) reasons.push(`In the ${loudButShort.join(' and ')} Hz band the claps were loud, but the room's echo faded into the background too soon. Clap from the front of the room, not near the device, and keep the room quiet.`);
   }
   else if (!(ctx.volumeFt3 > 0)) { verdict = 'Incomplete'; reasons.push('Room size is needed to pick the limit'); }

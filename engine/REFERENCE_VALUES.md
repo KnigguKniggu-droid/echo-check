@@ -130,6 +130,8 @@ Written by the Partner session, Friday 2026-11-13, about 21:10 CST. README Phase
 - **The trust badge depends on the browser's own report.** In these takes the audio-only checks caught nothing. Processing that the browser does not report (operating-system effects) would not be caught. The README and the page must not claim more.
 - **The "decay bends" warning fired on 11 of 14 clean takes.** It is now an information note that does not change the badge. The "noise changed after the clap" warning fired on 6 of 14, because real ambient noise is not steady; it stays as amber.
 
+**Rerun on the live HTTPS site (Saturday 11:20 CST):** the same 28 runs against https://kniggukniggu-droid.github.io/echo-check/app/ (GitHub Pages, real HTTPS instead of localhost). **All 28 verdicts are identical to Friday's local run** (14 off: same verdicts; 14 on: all Blocked). The hosted page loads the engine, gets the microphone and runs the full protocol.
+
 ## 6. Home rooms and classrooms: the MIT IR Survey (Friday 22:40 CST)
 
 **What was run:** `tools/mit_ir_test.py` on the 103 indoor impulse responses of the MIT IR Survey (Traer & McDermott, "Statistics of natural reverberation enable perceptual separation of sound and space", PNAS 2016; 32 kHz). The rooms are classrooms, bedrooms, bathrooms, kitchens, living and dining rooms, offices, hallways and gyms.
@@ -166,3 +168,57 @@ Written by the Partner session, Friday 2026-11-13, about 21:10 CST. README Phase
 - **46 rooms were "Incomplete"** (35 of them for the 2000 Hz band only), and the reason is known. The survey placed the microphone 1.5 m from the source, so the direct sound is strong. The "clean decay" figure (peak minus background) then looks large, while the room's own decay is too close to the background for T20. Giving no result is the safe and correct outcome.
 - A later-decay fit was tried to recover these rooms. It did not recover them and raised the max error from 11 % to 20 %, so it was reverted.
 - **In the real protocol** (claps at the front, device at the back row), the direct sound is weaker, so this matters less. Improvement idea for Saturday: measure the usable decay range from the decay curve itself, not from the peak.
+
+## 7. Simulated classrooms: the app's own geometry (pyroomacoustics, EPFL; Saturday 11:25 CST)
+
+**What was run:** `tools/pra_classroom_sim.py` builds 39 empty shoebox classrooms in pyroomacoustics 0.10.1 (EPFL LCAV; hybrid image-source order 3 + ray tracing, octave-band materials from its database, air absorption, scattering 0.15):
+- 3 sizes: 30×24×9 ft (6,474 ft³), 30×30×10 ft (8,998 ft³), 40×32×11 ft (14,061 ft³, limit 0.7 s).
+- 6 real finishes, from bare (plaster ceiling, block walls, vinyl) to ceiling tile + carpet + a back-wall panel, plus 7 uniform-absorption rooms.
+- A person claps 1.5 m from the front wall at 1.4 m height. The device lies on a desk (0.76 m) at a **front** (1.8 m from the clapper), **middle** or **back** seat (6–9 m).
+
+**The clap:** the octave-band shape of the team's own Friday claps (equal energy per octave from 500 Hz to 8 kHz within 1.5 dB), at **74 / 80 / 86 dB** (10 ms broadband level at 1 m: "soft / normal / loud"). **The absolute clap level is an ASSUMPTION** (Papadakis & Stavroulakis 2020 report a mean of 76–85 dB at about 60 cm, metric not stated). **The background:** HVAC-like noise (falling 5 dB per octave) at **35 dBA (the S12.60 limit), 45 and 50 dBA**. 1,053 takes in total. **Every take is scored by the real JS engine** (`tools/batch_assess.mjs`). The reference is pyrato T20 (Schroeder; the simulated responses are noise-free) on the same impulse response.
+
+| Seat | Clap | 35 dBA background: no verdict / median error | 45 dBA | 50 dBA |
+|---|---|---|---|---|
+| Front (1.8 m) | soft / normal / loud | 10 / 0 / 0 of 39 · 2.1 / 0.7 / 0.8 % | 39 / 39 / 3 of 39 | 39 / 39 / 38 of 39 |
+| Middle | soft / normal / loud | 36 / 9 / 6 of 39 · 1.1 / 1.4 / 0.8 % | 39 / 39 / 23 of 39 | all 39 |
+| Back (6–9 m) | soft / normal / loud | 37 / 21 / 17 of 39 · 1.1 / 1.1 / 1.2 % | 39 / 39 / 31 of 39 | all 39 |
+
+- **Verdicts given: 276 of 1,053 takes (26 %). Median error when a verdict is given: about 1 % (90th percentile ≤ 5.7 %).**
+- **False passes: 2 of 276 verdicts.** Both are at the **front seat, 1.8 m from the clapper**, in the same room (30×30×10 ft, ceiling tile + carpet + back-wall panel). The reference is 0.66 s with a bent 500 Hz decay (0.84 / 0.59 / 0.54 s per band). The engine read 0.45 and 0.43 s. A slow late decay sat below the background, so the engine could not see it. **The protocol must keep the device away from the clapper** (see the setup change below). Verdict disagreements: 8 of 276; 4 stricter than the reference, 4 less strict (including the 2 false passes).
+- **No verdict ("Incomplete") is the main outcome** at the back seat and at 45 dBA or more. **Cause: the claps do not rise far enough above the background** (median clean decay 34 dB at the back seat with the normal clap at 35 dBA; the gate needs 30 dB per clap, 2 claps per band). In 15 of the 21 back-seat Incompletes (normal clap, 35 dBA), the engine found no claps at all.
+- **Calibration check against reality:** Friday's real claps (home room, USB headset) gave **50–60 dB** of clean decay; the simulated normal clap gives 34–39 dB at 35 dBA. The real background in a home at night, or the distance, may explain the gap. **The background level in a real classroom during a test is the deciding unknown** (literature review in `research/CLASSROOM_FIELD_DATA.md`).
+
+**Calculator vs measurement (scattering check, `--scatter`, 30×30×10 ft room, back seat):**
+
+| Finish | Sabine (500–2k avg) | Measured T20 at scattering 0.15 / 0.30 / 0.50 / 0.70 / 0.90 |
+|---|---|---|
+| Ceiling tile only (vinyl, block walls) | 0.64 s | 1.04 / 0.63 / 0.57 / 0.50 / 0.48 s |
+| Ceiling tile + carpet | 0.35 s | 0.82 / 0.50 / 0.39 / 0.41 / 0.32 s |
+
+**Reading:** in an empty room with little scattering, a room with all its absorption on the ceiling can measure much longer than a Sabine calculator predicts (sound keeps bouncing between hard walls). With furniture-like scattering (0.3–0.5), the calculator and the measurement roughly agree. **Do not claim that calculators are wrong**; say that the result depends on the furniture and the layout, which a measurement includes and a formula does not.
+
+## 8. Real classrooms: measured impulse responses (HOMULA-RIR and PAN-AR; Saturday 11:30 CST)
+
+**What was run:** `tools/real_classroom_test.py` on measured responses from two universities. The same clap and background model as §7; each response is scaled so its direct sound matches a point source at the stated distance (checked on simulated responses: within about 2 dB). **Loudspeakers are directional, so this is harsher than a hand clap** (stronger direct sound).
+- **HOMULA-RIR** (Politecnico di Milano, 2024; Zenodo 10479726, **CC BY 4.0**, MD5 matched): a furnished seminar room used for lessons, 268 m³ (9,464 ft³, limit 0.6 s). 2 loudspeakers at the front, **25 seats in 5 rows, 3.5 to 9.7 m from the front**. 50 responses.
+- **PAN-AR** (University of Milan, LIM, 2024; sofacoustics.org): a classroom (472 m³, limit 0.7 s) and a meeting room (87.8 m³, limit 0.6 s), 5 source positions each. **Licence conflict: the files say CC BY-NC-SA 4.0, Zenodo says CC BY-SA 4.0.** Non-commercial use only.
+- Reference: pyrato (Lundeby + T20) on each measured response. Audio stays in `private/`.
+
+| Room | Reference T20 (3-band) | Takes | Verdicts given (35 dBA: soft / normal / loud) | Verdict agrees | Median error | **False passes** |
+|---|---|---|---|---|---|---|
+| HOMULA seminar room | 0.68–0.78 s (over 0.6) | 450 | 0 / 8 / 23 of 50 | 27 of 31 (3 said "too close" where the reference says "over"; 1 was stricter than the reference) | 1.0–4.3 % | **0** |
+| PAN-AR classroom | 1.04–1.09 s (over 0.7) | 45 | 0 / 2 / 4 of 5 | 6 of 6 | 1.8–1.9 % | **0** |
+| PAN-AR meeting room | 1.16–1.22 s (over 0.6) | 45 | 4 / 5 / 5 of 5 (loud clap at 45 dBA: 5 of 5) | 21 of 21 | 0.6–2.7 % | **0** |
+
+**HOMULA by row (normal clap, 35 dBA): row 1 (3.5 m) 7 of 10 verdicts; row 2 (5.0 m) 1 of 10; rows 3–5 (6.5–9.7 m) 0 of 10.** At 45 dBA: no verdicts in HOMULA or the PAN-AR classroom.
+
+**Reading:**
+- **0 false passes in 540 takes in real rooms. When a verdict is given, it is accurate (median error 0.6–4.3 %).**
+- **All three rooms are over the limit,** so this test shows that the engine does not pass an over-limit room. It cannot check under-limit rooms (§4 and §6 do).
+- **Distance matters most:** a seat 3.5 m from the clapper gives a verdict in most takes; seats 6.5 m or more away rarely do, with our assumed clap level.
+
+**What changed in the product because of §7 and §8 (Saturday 11:35):**
+1. The setup step now says: close the door and windows, switch off fans and the projector, and switch off loud ventilation if allowed; a quiet room is the most important condition.
+2. "Incomplete" now says *why*: "No claps were heard clearly above the background noise" or "The claps were too quiet above the background at this seat (best N dB, need 30 dB)", with what to do (quieter room, cupped claps, a seat about 3–5 m from the clapper). New test; 21 of 21 tests pass.
+3. **Open decision (team):** the device position. Today's evidence says 3–5 m from the clapper, not the far back row and not the front row. The README protocol says "back-row desk".
