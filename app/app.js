@@ -287,7 +287,10 @@ function renderResult(res, meta) {
     const clean = res.claps.slice(0, 4).map((c) => c.bands[fc].cleanDecayDb).filter((d) => d !== null);
     return `<tr><td>${fc} Hz</td><td class="num">${fmt(a.bandT20[fc])} s</td><td class="num">${a.bandClaps[fc]} of ${Math.min(4, res.claps.length)}</td><td class="num">${clean.length ? Math.round(Math.min(...clean)) + ' dB' : '—'}</td></tr>`;
   }).join('');
-  $('echo').innerHTML = `<p><strong>3-band average: ${fmt(a.avgT20)} s</strong>${lim ? ` · limit ${lim} s (${v ? Math.round(v).toLocaleString('en-US') : '—'} cubic feet)` : ''}${a.confidence ? ` · ${a.confidence === 'full' ? 'full confidence' : 'lower confidence (30–37 dB of clean decay)'}` : ''}</p>${bar}
+  const edtNote = a.basis === 'EDT'
+    ? `<p><strong>Early-decay estimate (EDT), 3-band average: ${fmt(a.avgEDT)} s</strong> · ${BANDS.map((fc) => `${fc} Hz ${fmt(a.bandEDT[fc])} s`).join(' · ')} · lower confidence. The claps were too quiet for the full T20 measurement, so this can only say "likely over", never "under".</p>`
+    : '';
+  $('echo').innerHTML = `${edtNote}<p><strong>3-band average: ${fmt(a.avgT20)} s</strong>${lim ? ` · limit ${lim} s (${v ? Math.round(v).toLocaleString('en-US') : '—'} cubic feet)` : ''}${a.confidence && a.basis !== 'EDT' ? ` · ${a.confidence === 'full' ? 'full confidence' : 'lower confidence (30–37 dB of clean decay)'}` : ''}</p>${bar}
     <table><thead><tr><th>Band</th><th class="num">T20</th><th class="num">Claps used</th><th class="num">Least clean decay</th></tr></thead><tbody>${rows}</tbody></table>
     <p class="small">Claps found: ${res.claps.length} (the first 4 are used). "Too close to call" means within ±15 % of the limit.${a.spread !== null ? ` Clap-to-clap spread: ${Math.round(a.spread * 100)} %.` : ''}</p>`;
 
@@ -313,6 +316,8 @@ function renderResult(res, meta) {
       : `<p><strong>${sm >= 0 ? '+' : ''}${Math.round(sm)} dB</strong> (guideline: at least +${a.speechGuidelineDb} dB). Empty room, best case.</p>`
         + (status === 'flagged' ? '<p class="msg"><strong>May read too high:</strong> the trust check has warnings (see above). Treat this number with caution.</p>' : '')
         + why;
+  // Autotest: confirm that the whole result page rendered (an error above would stop this line).
+  if (window.__autotest && meta.source === 'microphone') console.log('ECHOCHECK_RENDERED ' + JSON.stringify({ verdict: a.verdict, basis: a.basis, avgEDT: a.avgEDT, echoChars: $('echo').textContent.length }));
 }
 
 function saveBlob(blob, name) {

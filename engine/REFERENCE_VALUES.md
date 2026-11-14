@@ -222,3 +222,31 @@ Written by the Partner session, Friday 2026-11-13, about 21:10 CST. README Phase
 1. The setup step now says: close the door and windows, switch off fans and the projector, and switch off loud ventilation if allowed; a quiet room is the most important condition.
 2. "Incomplete" now says *why*: "No claps were heard clearly above the background noise" or "The claps were too quiet above the background at this seat (best N dB, need 30 dB)", with what to do (quieter room, cupped claps, a seat about 3–5 m from the clapper). New test; 21 of 21 tests pass.
 3. **Open decision (team):** the device position. Today's evidence says 3–5 m from the clapper, not the far back row and not the front row. The README protocol says "back-row desk".
+
+## 9. Early-decay rescue: "Likely over" from quiet claps (Saturday 11:45 CST)
+
+**Problem (§7–§8):** most "Incomplete" results come from claps that are too quiet for T20 (it needs 30 dB of clean decay per clap). Most of these rooms are over the limit: 1,103 of 1,259 Incomplete takes in §7–§8.
+
+**Rule (in `engine/echo-engine.js`, `DEFAULTS.edtRescue`):** when T20 is Incomplete, the engine uses the early decay time (EDT, 0 to −10 dB of the decay curve), which needs much less clean decay. It says **"Likely over the limit", lower confidence**, only if all of these hold:
+- each band has at least 2 claps with at least 20 dB of clean decay;
+- the 3-band EDT average is at least **1.3 × the limit**;
+- every band's EDT is at or above the limit;
+- the room size is known, the room is 20,000 ft³ or less, and the trust badge is not red.
+
+**It can never pass a room.** EDT read 4.9 % shorter than T20 (median; 10th–90th percentile −24 % to +9 %) in 437 takes that had enough decay for both, so it errs toward "under". A wrong rescue could at worst turn "Too close to call" into "Likely over"; both give the same next step (ask for a proper measurement).
+
+**Validation with the real JS engine on every dataset (before → after):**
+
+| Dataset | No verdict | Rescued by EDT | Rescued rooms that are really over the limit | Rescued rooms that are close or under | False passes | Other verdicts changed |
+|---|---|---|---|---|---|---|
+| Simulated classrooms (§7) | 777 → 566 of 1,053 | 211 | 211 | **0** | 2 → 2 | 0 |
+| Real classrooms (§8) | 482 → 455 of 540 | 27 | 27 | **0** | 0 → 0 | 0 |
+| ACE browser takes (§5, processing off) | 3 → 2 of 14 | 1 (Lecture Room 2, 1.67 s) | 1 | **0** | 0 | 0 |
+| MIT harsh setup (§6), now run through the JS engine | 45 → 35 of 102 | 10 | 10 | **0** | 0 | 0 |
+| MIT back-row-like setup (§6) | 2 of 102 | 0 | — | — | 0 | 0 |
+
+**Total: 249 rescues, all in rooms that are over the limit; 0 in rooms that are close to or under the limit; no other verdict changed.** Synthetic tests: quiet claps at T60 1.2 s → "Likely over" (EDT within 5 % of the true value); at 0.4 and 0.6 s → still Incomplete. 22 of 22 tests pass.
+
+**MIT through the JS engine (new; Friday used the Python mirror):** harsh setup 57 verdicts, median error 2.0 %, 0 false passes; back-row-like setup 100 verdicts, median error 5.9 %, 0 false passes, 0 of 35 classrooms Incomplete. Close to Friday's Python mirror (harsh: 46 Incomplete before the rescue vs 45 here; median error 2.0 % in both).
+
+**Limits:** EDT can read longer than T20 at some seats (strong late energy, coupled spaces). The 1.3× margin and the every-band check guard against that; in our data the largest EDT over-read was +9 % at the 90th percentile. The page shows the EDT values and says "lower confidence" and "can only say likely over, never under".

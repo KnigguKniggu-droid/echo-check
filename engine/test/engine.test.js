@@ -87,6 +87,23 @@ test('limit and decision rules', () => {
   assert.equal(E.decide(0.50, 0.6), 'Under the limit (weak evidence)');
 });
 
+test('early-decay rescue: quiet claps in an echoey room give "Likely over" (lower confidence), never a pass', () => {
+  const run = (T60, opts) => {
+    const { fs, x } = synth({ T60, amp: 0.5, noiseDb: -33, seed: 5 });
+    return E.assess(E.analyse(x, fs), { volumeFt3: 8000, reported: NO_PROCESSING }, opts);
+  };
+  const over = run(1.2);
+  assert.equal(over.verdict, 'Likely over the limit', over.reasons.join(' | '));
+  assert.equal(over.basis, 'EDT');
+  assert.equal(over.confidence, 'lower');
+  assert.equal(over.avgT20, null);
+  near(over.avgEDT, 1.2, 'EDT average');
+  for (const T of [0.4, 0.6]) assert.equal(run(T).verdict, 'Incomplete', `T60 ${T} must stay Incomplete`);
+  assert.equal(run(1.2, { edtRescue: false }).verdict, 'Incomplete');
+  const noSize = (() => { const { fs, x } = synth({ T60: 1.2, amp: 0.5, noiseDb: -33, seed: 5 }); return E.assess(E.analyse(x, fs), { reported: NO_PROCESSING }); })();
+  assert.equal(noSize.verdict, 'Incomplete', 'no room size, no limit, no rescue');
+});
+
 test('Incomplete says why: claps too quiet, or no claps at all', () => {
   const quiet = synth({ T60: 0.6, amp: 0.5, noiseDb: -33, seed: 5 });
   const a = E.assess(E.analyse(quiet.x, quiet.fs), { volumeFt3: 8000, reported: NO_PROCESSING });

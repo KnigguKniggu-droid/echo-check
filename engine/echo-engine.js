@@ -37,6 +37,12 @@ export const DEFAULTS = {
   // too high (Friday device test: +37 dB raw, +66 dB with Chrome noise suppression). A margin
   // above this is treated as a sign of filtering. Starting point from 1 device; tune it.
   speechSuspiciousDb: 55,
+  // Early-decay rescue (engine/REFERENCE_VALUES.md §9). When T20 is Incomplete because the claps were too
+  // quiet, the early decay (EDT, 0 to -10 dB) needs less clean decay. EDT read 4.9 % shorter than T20 (median)
+  // in 437 simulated and real takes, so it errs toward "under". It may only say "Likely over"; it never passes a room.
+  edtRescue: true,
+  edtRescueFactor: 1.3,       // 3-band EDT average >= 1.3 x limit, and every band >= the limit
+  edtRescueMinDb: 20,         // claps with at least this much clean decay; minClapsPerBand per band
 };
 
 // ---------- small numeric helpers ----------
@@ -486,7 +492,23 @@ export function assess(result, ctx = {}, opts = {}) {
   const limit = limitFor(ctx.volumeFt3);
   const reasons = [];
   let verdict;
+  let basis = complete ? 'T20' : null;
+  // Early-decay estimate per band (used only for the rescue below).
+  const bandEDT = {};
+  for (const fc of BANDS) {
+    const v = usable.map((c) => c.bands[fc]).filter((b) => b.cleanDecayDb !== null && b.cleanDecayDb >= o.edtRescueMinDb && Number.isFinite(b.EDT) && b.EDT > 0).map((b) => b.EDT);
+    bandEDT[fc] = v.length >= o.minClapsPerBand ? median(v) : null;
+  }
+  const edtAll = BANDS.every((fc) => bandEDT[fc] !== null);
+  const avgEDT = edtAll ? BANDS.reduce((s, fc) => s + bandEDT[fc], 0) / BANDS.length : null;
+  const rescue = !red.length && !complete && o.edtRescue && limit !== null && edtAll
+    && avgEDT >= o.edtRescueFactor * limit && BANDS.every((fc) => bandEDT[fc] >= limit);
   if (red.length) verdict = 'Blocked';
+  else if (rescue) {
+    verdict = 'Likely over the limit';
+    basis = 'EDT';
+    reasons.push(`Estimated from the early part of the echo (EDT ${avgEDT.toFixed(2)} s, ${Math.round(avgEDT / limit * 100 - 100)} % over the limit), because the claps were too quiet for the full measurement. The early part usually reads shorter than the full echo time, so the room is likely at least this echoey. A quieter room gives a full measurement.`);
+  }
   else if (!complete) {
     verdict = 'Incomplete';
     // Say which bands failed and why. Loud claps can still fail when the room's own echo sits close to
@@ -521,7 +543,8 @@ export function assess(result, ctx = {}, opts = {}) {
   return {
     verdict, reasons, badge, red, amber, notes,
     limitS: limit, avgT20, bandT20, bandClaps: bandN,
-    confidence: complete ? (lowerConfidence ? 'lower' : 'full') : null,
+    confidence: basis === 'EDT' ? 'lower' : complete ? (lowerConfidence ? 'lower' : 'full') : null,
+    basis, avgEDT, bandEDT,
     spread, clapsUsed: usable.length, clapsFound: result.claps.length,
     speechMarginDb: result.speechMarginDb, speechGuidelineDb: o.speechGuidelineDb,
     // Filtering inflates the margin: show it only when the badge is green, flag it when amber.
