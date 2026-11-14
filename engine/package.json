@@ -1,0 +1,9 @@
+{
+  "name": "echo-check-engine",
+  "private": true,
+  "type": "module",
+  "description": "Echo Check+ engine core: octave-band clap decay analysis, trust signals and S12.60 verdict",
+  "scripts": {
+    "test": "node --test test/engine.test.js"
+  }
+}

@@ -1,0 +1,354 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Echo Check recorder test</title>
+<style>
+:root{--bg:#ffffff;--fg:#1a1a1a;--muted:#5b5b5b;--line:#d9d9d9;--accent:#0b57d0;--on-accent:#ffffff;--ok:#137333;--warn:#8a4b00;--bad:#b3261e;--card:#f6f7f9}
+@media (prefers-color-scheme:dark){:root{--bg:#121212;--fg:#ececec;--muted:#a8a8a8;--line:#3a3a3a;--accent:#8ab4f8;--on-accent:#0b1b33;--ok:#81c995;--warn:#fdd663;--bad:#f28b82;--card:#1d1e20}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:760px;margin:0 auto;padding:16px}
+h1{font-size:1.4rem;margin:.2em 0}
+h2{font-size:1.05rem;margin:1em 0 .4em}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px;margin:12px 0}
+label{display:block;font-weight:600;margin:.5em 0 .2em}
+input[type=text],select{width:100%;padding:10px;font:inherit;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--fg)}
+button{font:inherit;font-weight:600;padding:12px 18px;border-radius:8px;border:1px solid var(--accent);background:var(--accent);color:var(--on-accent);cursor:pointer;min-height:44px}
+button.secondary{background:transparent;color:var(--accent)}
+button:disabled{opacity:.45;cursor:not-allowed}
+button:focus-visible,a:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.phase{font-size:1.5rem;font-weight:700;margin:.3em 0;min-height:1.5em}
+.big{font-variant-numeric:tabular-nums;font-size:1.2rem;font-weight:700}
+.meter{height:14px;background:var(--line);border-radius:7px;overflow:hidden;margin-top:6px}
+.meter>div{height:100%;width:0;background:var(--ok)}
+table{border-collapse:collapse;width:100%;font-size:.95rem}
+td,th{border-bottom:1px solid var(--line);padding:6px 4px;text-align:left;vertical-align:top;overflow-wrap:anywhere}
+.on{color:var(--bad);font-weight:700}.off{color:var(--ok);font-weight:700}.unknown{color:var(--warn);font-weight:700}
+.msg{padding:10px;border-radius:8px;border:1px solid var(--line);margin:10px 0 4px}
+.msg.err{border-color:var(--bad);color:var(--bad)}
+.small{color:var(--muted);font-size:.9rem}
+.warn{color:var(--warn);font-weight:600}
+ol,ul{padding-left:1.3em}
+code{overflow-wrap:anywhere}
+a.dl{display:inline-block;margin:4px 12px 4px 0;font-weight:600;color:var(--accent)}
+.take{border-top:1px solid var(--line);padding-top:8px;margin-top:8px}
+.take:first-child{border-top:0;margin-top:0;padding-top:0}
+#selftest{display:none}
+</style>
+</head>
+<body>
+<main>
+<h1>Echo Check recorder test</h1>
+<p class="small">Records raw microphone audio to a WAV file for the device test (README section 7, U1–U4). The audio stays on this device until you download it. The page plays no sound.</p>
+
+<div class="card">
+  <label for="device">Device name</label>
+  <input id="device" type="text" placeholder="e.g. hp-laptop-chrome or iphone-safari" autocomplete="off">
+  <label for="pass">Pass</label>
+  <select id="pass">
+    <option value="off">Pass 1: processing OFF (raw)</option>
+    <option value="on">Pass 2: processing ON (browser defaults)</option>
+  </select>
+  <label for="mode">Length</label>
+  <select id="mode">
+    <option value="guided">Guided 45 s (quiet, claps, reading), stops by itself</option>
+    <option value="manual">Manual: stops when you press Stop</option>
+  </select>
+  <div class="row" style="margin-top:12px">
+    <button id="start" type="button">Start recording</button>
+    <button id="stop" class="secondary" type="button" disabled>Stop</button>
+    <button id="selftest" class="secondary" type="button">Self-test (no microphone)</button>
+  </div>
+  <div id="status" class="msg" role="status" aria-live="polite">Ready.</div>
+  <div class="phase" id="phase" aria-live="assertive"></div>
+  <div class="row"><span class="big" id="clock">0.0 s</span><span class="small" id="peak">peak — dBFS</span><span class="small" id="clips">clipped 0</span></div>
+  <div class="meter" aria-hidden="true"><div id="bar"></div></div>
+</div>
+
+<div class="card">
+  <h2>Microphone settings the browser reports</h2>
+  <div id="settings" class="small">Start a recording to see them.</div>
+</div>
+
+<div class="card">
+  <h2>Recordings</h2>
+  <div id="takes" class="small">None yet.</div>
+</div>
+
+<div class="card">
+  <h2>Device test steps</h2>
+  <ol>
+    <li>Put up to 3 devices side by side on a desk at the back of a room. Type each device's name above.</li>
+    <li>Turn off operating-system processing first (list below).</li>
+    <li><b>Pass 1:</b> choose "processing OFF" on every device and start all of them. Stay quiet for 10 s. Clap 4 times from the front of the room, about 3 s apart. Wait. Read aloud when the page says so. Each page stops at 45 s.</li>
+    <li><b>Pass 2:</b> choose "processing ON" and repeat the same claps.</li>
+    <li>Download every WAV and its info file. Measure the room: length, width and height.</li>
+    <li>Put all files in <code>private/device-test/</code>. Do not commit them.</li>
+  </ol>
+  <h2>Turn off operating-system processing</h2>
+  <ul>
+    <li><b>Windows 11:</b> Settings → System → Sound → your microphone → turn off "Audio enhancements" and, if shown, "Voice clarity".</li>
+    <li><b>Mac, iPhone, iPad:</b> while recording, open Control Center → Mic Mode → Standard.</li>
+    <li><b>Chromebook:</b> Settings → Device → Audio → turn off noise cancellation.</li>
+    <li><b>Android:</b> no system switch. The browser flags are all we control.</li>
+  </ul>
+  <p class="small">The page can only read the browser's flags. Processing inside the operating system is invisible here; the WAV analysis looks for its signature.</p>
+</div>
+<p class="small">STEMergent Hacks 2026 · Echo Check+ · a test tool, not the product.</p>
+</main>
+
+<script>
+(() => {
+  'use strict';
+  const $ = (id) => document.getElementById(id);
+  const GUIDED_S = 45;
+  const PHASES = [[0, 'Stay quiet'], [10, 'Clap 4 times from the front, about 3 s apart'], [25, 'Stay quiet'], [30, 'Read aloud'], [41, 'Quiet, finishing']];
+  const FLAGS = ['echoCancellation', 'noiseSuppression', 'autoGainControl', 'voiceIsolation'];
+  const WORKLET_SRC = "class Rec extends AudioWorkletProcessor{process(inputs){const ch=inputs[0]&&inputs[0][0];if(ch&&ch.length)this.port.postMessage(ch.slice(0));return true}}registerProcessor('rec',Rec);";
+
+  let ctx = null, stream = null, srcNode = null, recNode = null, sink = null;
+  let chunks = [], nSamples = 0, peak = 0, clips = 0, blockPeak = 0;
+  let t0 = 0, timer = null, running = false, info = null, takes = 0, waitTimer = null;
+
+  const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const db = (x) => (x > 0 ? 20 * Math.log10(x) : -Infinity);
+  const setStatus = (text, err) => { const s = $('status'); s.textContent = text; s.className = 'msg' + (err ? ' err' : ''); };
+
+  function constraintsFor(pass) {
+    const v = pass !== 'off';
+    return { audio: { echoCancellation: v, noiseSuppression: v, autoGainControl: v, voiceIsolation: v, channelCount: { ideal: 1 } } };
+  }
+
+  function flagCell(v) {
+    if (v === true) return '<td class="on">on</td>';
+    if (v === false) return '<td class="off">off</td>';
+    return '<td class="unknown">unknown (not reported)</td>';
+  }
+
+  function renderSettings(s, label, sr, method, pass) {
+    let h = '<table><tr><th>Setting</th><th>Reported</th></tr>';
+    for (const f of FLAGS) h += '<tr><td>' + f + '</td>' + flagCell(s[f]) + '</tr>';
+    h += '<tr><td>Microphone</td><td>' + esc(label || '(no label)') + '</td></tr>';
+    h += '<tr><td>Track sample rate</td><td>' + esc(s.sampleRate ?? 'unknown') + '</td></tr>';
+    h += '<tr><td>Recording sample rate</td><td>' + sr + ' Hz</td></tr>';
+    h += '<tr><td>Channels</td><td>' + esc(s.channelCount ?? 'unknown') + '</td></tr>';
+    h += '<tr><td>Capture method</td><td>' + esc(method) + '</td></tr></table>';
+    const ignored = pass === 'off' && FLAGS.some((f) => s[f] === true);
+    h += ignored ? '<p class="warn">The browser kept some processing on although we asked for it off. Note this device.</p>'
+                 : '<p class="small">"on" during pass 1 would mean the browser ignored our request.</p>';
+    $('settings').innerHTML = h;
+  }
+
+  function onChunk(f32) {
+    if (!running) return;
+    chunks.push(f32);
+    nSamples += f32.length;
+    let p = 0;
+    for (let i = 0; i < f32.length; i++) { const a = Math.abs(f32[i]); if (a > p) p = a; if (a >= 0.999) clips++; }
+    if (p > peak) peak = p;
+    if (p > blockPeak) blockPeak = p;
+  }
+
+  function tick() {
+    const t = (performance.now() - t0) / 1000;
+    $('clock').textContent = t.toFixed(1) + ' s';
+    const d = db(blockPeak); blockPeak = 0;
+    $('bar').style.width = Math.max(0, Math.min(100, ((d + 60) / 60) * 100)) + '%';
+    $('peak').textContent = 'peak ' + (peak > 0 ? db(peak).toFixed(1) : '—') + ' dBFS';
+    $('clips').textContent = 'clipped ' + clips;
+    if ($('mode').value === 'guided') {
+      let ph = '';
+      for (const [s, txt] of PHASES) if (t >= s) ph = txt;
+      $('phase').textContent = ph + ' (' + Math.max(0, Math.ceil(GUIDED_S - t)) + ' s left)';
+      if (t >= GUIDED_S) stop();
+    } else {
+      $('phase').textContent = 'Recording';
+    }
+  }
+
+  function synthSource(c) {
+    // Self-test only: 4 synthetic claps (exponential decay, T60 0.6 s) over a -70 dBFS noise floor.
+    const sr = c.sampleRate, len = Math.round(sr * 14), buf = c.createBuffer(1, len, sr), x = buf.getChannelData(0);
+    const floor = Math.pow(10, -70 / 20), k = Math.log(1000) / 0.6;
+    for (let i = 0; i < len; i++) x[i] = floor * (Math.random() * 2 - 1);
+    for (const tc of [2, 5, 8, 11]) {
+      const s0 = Math.round(tc * sr);
+      for (let i = 0; i < Math.round(1.5 * sr) && s0 + i < len; i++) x[s0 + i] += 0.5 * Math.exp(-k * (i / sr)) * (Math.random() * 2 - 1);
+    }
+    const node = c.createBufferSource();
+    node.buffer = buf;
+    return node;
+  }
+
+  async function start(selftest) {
+    if (running) return;
+    if (!selftest && !(window.isSecureContext && navigator.mediaDevices && navigator.mediaDevices.getUserMedia)) {
+      setStatus('The microphone needs https or localhost. Open the hosted link, or run a localhost server.', true);
+      return;
+    }
+    const pass = $('pass').value;
+    const req = constraintsFor(pass);
+    $('start').disabled = true;
+    $('selftest').disabled = true;
+    try {
+      ctx = new (window.AudioContext || window.webkitAudioContext)({ latencyHint: 'interactive' });
+      let track = null;
+      if (selftest) {
+        setStatus('Self-test: synthetic claps, no microphone.');
+        srcNode = synthSource(ctx);
+      } else {
+        setStatus('Asking for the microphone. Allow it in the browser prompt.');
+        waitTimer = setTimeout(() => setStatus('Still waiting for the microphone. Look for a prompt or a blocked-microphone icon in the address bar.', true), 8000);
+        stream = await navigator.mediaDevices.getUserMedia(req);
+        clearTimeout(waitTimer);
+        track = stream.getAudioTracks()[0];
+        srcNode = ctx.createMediaStreamSource(stream);
+      }
+      if (ctx.state === 'suspended') await ctx.resume();
+      sink = ctx.createGain();
+      sink.gain.value = 0; // digital silence: the page never plays sound
+      sink.connect(ctx.destination);
+      let method;
+      try {
+        if (!ctx.audioWorklet) throw new Error('no AudioWorklet');
+        const url = URL.createObjectURL(new Blob([WORKLET_SRC], { type: 'application/javascript' }));
+        await ctx.audioWorklet.addModule(url);
+        URL.revokeObjectURL(url);
+        recNode = new AudioWorkletNode(ctx, 'rec', { numberOfInputs: 1, numberOfOutputs: 1, channelCount: 1, channelCountMode: 'explicit', channelInterpretation: 'speakers' });
+        recNode.port.onmessage = (e) => onChunk(e.data);
+        method = 'AudioWorklet (raw PCM)';
+      } catch (err) {
+        recNode = ctx.createScriptProcessor(4096, 1, 1);
+        recNode.onaudioprocess = (e) => onChunk(new Float32Array(e.inputBuffer.getChannelData(0)));
+        method = 'ScriptProcessor fallback (raw PCM)';
+      }
+      srcNode.connect(recNode);
+      recNode.connect(sink);
+      const s = track && track.getSettings ? track.getSettings() : {};
+      renderSettings(s, track ? track.label : 'synthetic self-test', ctx.sampleRate, method, pass);
+      info = {
+        device: $('device').value.trim() || 'device', pass, requested: req.audio, reported: s,
+        microphone: track ? track.label : 'selftest', sampleRate: ctx.sampleRate, captureMethod: method,
+        userAgent: navigator.userAgent, startedAt: new Date().toISOString(), selftest: !!selftest, wentHidden: false
+      };
+      chunks = []; nSamples = 0; peak = 0; clips = 0; blockPeak = 0;
+      running = true;
+      t0 = performance.now();
+      if (selftest) srcNode.start();
+      timer = setInterval(tick, 100);
+      $('stop').disabled = false;
+      setStatus('Recording. Keep this tab in front and the screen on.');
+    } catch (e) {
+      clearTimeout(waitTimer);
+      cleanup();
+      $('start').disabled = false;
+      $('selftest').disabled = false;
+      const n = e && e.name;
+      setStatus(
+        n === 'NotAllowedError' || n === 'SecurityError' ? 'Microphone blocked. Allow it from the address bar (lock or microphone icon), then try again.'
+        : n === 'NotFoundError' ? 'No microphone found on this device.'
+        : n === 'NotReadableError' ? 'The microphone is busy in another app. Close that app and try again.'
+        : 'Could not start: ' + ((e && e.message) || e), true);
+    }
+  }
+
+  function cleanup() {
+    for (const n of [srcNode, recNode, sink]) { try { if (n) n.disconnect(); } catch (_) {} }
+    if (stream) stream.getTracks().forEach((t) => t.stop());
+    if (ctx) ctx.close().catch(() => {});
+    ctx = stream = srcNode = recNode = sink = null;
+  }
+
+  function concat(list, n) {
+    const out = new Float32Array(n);
+    let o = 0;
+    for (const c of list) { out.set(c, o); o += c.length; }
+    return out;
+  }
+
+  function quietestRmsDb(x, sr) {
+    const w = Math.round(sr / 2);
+    let best = Infinity;
+    for (let s = 0; s + w <= x.length; s += w) {
+      let e = 0;
+      for (let i = s; i < s + w; i++) e += x[i] * x[i];
+      best = Math.min(best, e / w);
+    }
+    return best === Infinity || best === 0 ? null : +(10 * Math.log10(best)).toFixed(1);
+  }
+
+  function encodeWav16(x, sr) {
+    const n = x.length, buf = new ArrayBuffer(44 + n * 2), v = new DataView(buf);
+    const w = (o, s) => { for (let i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i)); };
+    w(0, 'RIFF'); v.setUint32(4, 36 + n * 2, true); w(8, 'WAVE');
+    w(12, 'fmt '); v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+    v.setUint32(24, sr, true); v.setUint32(28, sr * 2, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true);
+    w(36, 'data'); v.setUint32(40, n * 2, true);
+    for (let i = 0, o = 44; i < n; i++, o += 2) {
+      const s = Math.max(-1, Math.min(1, x[i]));
+      v.setInt16(o, s < 0 ? Math.round(s * 32768) : Math.round(s * 32767), true);
+    }
+    return new Blob([buf], { type: 'audio/wav' });
+  }
+
+  const slug = (s) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'device';
+  function stamp(d) {
+    const p = (n) => String(n).padStart(2, '0');
+    return '' + d.getFullYear() + p(d.getMonth() + 1) + p(d.getDate()) + '-' + p(d.getHours()) + p(d.getMinutes()) + p(d.getSeconds());
+  }
+
+  function addTake(wav, meta) {
+    const base = 'echo-test_' + slug(meta.device) + '_pass-' + meta.pass + '_' + stamp(new Date()) + (meta.selftest ? '_selftest' : '');
+    if (!takes) $('takes').innerHTML = '';
+    takes++;
+    const notes = [];
+    if (meta.clippedSamples > 0) notes.push('Clipped: clap further from the device.');
+    if (meta.peakDbfs !== null && meta.peakDbfs < -30) notes.push('Very quiet claps: clap louder or closer.');
+    if (meta.wentHidden) notes.push('The tab was hidden during recording: redo this take.');
+    if (meta.durationS < 20 && !meta.selftest) notes.push('Short take: under 20 s.');
+    const div = document.createElement('div');
+    div.className = 'take';
+    div.innerHTML = '<p><b>' + esc(base) + '</b><br>' + meta.durationS + ' s · peak ' + (meta.peakDbfs ?? '—') + ' dBFS · clipped ' + meta.clippedSamples +
+      ' · quietest 0.5 s: ' + (meta.quietestDbfs ?? '—') + ' dBFS</p>' + (notes.length ? '<p class="warn">' + esc(notes.join(' ')) + '</p>' : '');
+    const a1 = document.createElement('a'); a1.className = 'dl'; a1.href = URL.createObjectURL(wav); a1.download = base + '.wav'; a1.textContent = 'Download WAV';
+    const a2 = document.createElement('a'); a2.className = 'dl'; a2.href = URL.createObjectURL(new Blob([JSON.stringify(meta, null, 2)], { type: 'application/json' }));
+    a2.download = base + '.json'; a2.textContent = 'Download info (JSON)';
+    div.append(a1, a2);
+    $('takes').prepend(div);
+    window.__lastTake = { base, meta, wavBytes: wav.size };
+  }
+
+  function stop() {
+    if (!running) return;
+    running = false;
+    clearInterval(timer);
+    const sr = ctx.sampleRate;
+    cleanup();
+    const x = concat(chunks, nSamples);
+    chunks = [];
+    info.durationS = +(x.length / sr).toFixed(2);
+    info.peakDbfs = peak > 0 ? +db(peak).toFixed(1) : null;
+    info.clippedSamples = clips;
+    info.quietestDbfs = quietestRmsDb(x, sr);
+    info.stoppedAt = new Date().toISOString();
+    addTake(encodeWav16(x, sr), info);
+    $('start').disabled = false;
+    $('selftest').disabled = false;
+    $('stop').disabled = true;
+    $('phase').textContent = '';
+    setStatus('Done. Download the WAV and the info file below.');
+  }
+
+  document.addEventListener('visibilitychange', () => { if (running && document.hidden && info) info.wentHidden = true; });
+  $('start').addEventListener('click', () => start(false));
+  $('stop').addEventListener('click', stop);
+  $('selftest').addEventListener('click', () => start(true));
+  if (/[?&]selftest\b/.test(location.search)) $('selftest').style.display = 'inline-block';
+  window.__recorder = { start, stop };
+})();
+</script>
+</body>
+</html>

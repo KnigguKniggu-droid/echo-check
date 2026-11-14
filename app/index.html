@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Echo Check+</title>
+<meta name="description" content="Free room echo check for classrooms. Clap four times, get the echo time in three bands against the ANSI/ASA S12.60 limit. Audio stays on this device.">
+<style>
+:root{--bg:#ffffff;--fg:#1a1a1a;--muted:#5b5b5b;--line:#d9d9d9;--accent:#0b57d0;--on-accent:#ffffff;--ok:#137333;--ok-bg:#e6f4ea;--warn:#8a4b00;--warn-bg:#fef7e0;--bad:#b3261e;--bad-bg:#fce8e6;--card:#f6f7f9}
+@media (prefers-color-scheme:dark){:root{--bg:#121212;--fg:#ececec;--muted:#a8a8a8;--line:#3a3a3a;--accent:#8ab4f8;--on-accent:#0b1b33;--ok:#81c995;--ok-bg:#16301f;--warn:#fdd663;--warn-bg:#3a3012;--bad:#f28b82;--bad-bg:#3c1a18;--card:#1d1e20}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:760px;margin:0 auto;padding:16px}
+h1{font-size:1.6rem;margin:8px 0 2px}
+h2{font-size:1.2rem;margin:0 0 8px}
+p{margin:6px 0}
+.lede{color:var(--muted);margin-bottom:12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px;margin:12px 0}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+button,.btn{font:inherit;font-weight:600;padding:12px 18px;border-radius:8px;border:1px solid var(--accent);background:var(--accent);color:var(--on-accent);cursor:pointer;min-height:44px;text-decoration:none;display:inline-block}
+button.secondary,.btn.secondary{background:transparent;color:var(--accent)}
+button:disabled{opacity:.5;cursor:default}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+label{font-weight:600}
+input[type=number],select{width:100%;padding:10px;font:inherit;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--fg)}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+@media (max-width:480px){.grid3{grid-template-columns:1fr}}
+.small{color:var(--muted);font-size:.9rem}
+.msg{padding:10px 12px;border-radius:8px;border:1px solid var(--line);margin:10px 0}
+.msg.err{border-color:var(--bad);color:var(--bad);background:var(--bad-bg)}
+ol.steps li,ul.list li{margin:4px 0}
+.phase{font-size:2.6rem;font-weight:800;line-height:1.15;margin:8px 0;text-align:center}
+.count{font-size:4rem;font-weight:800;text-align:center;font-variant-numeric:tabular-nums}
+.meter{height:14px;background:var(--line);border-radius:7px;overflow:hidden;margin-top:8px}
+.meter>div{height:100%;width:0;background:var(--ok)}
+.verdict{border-radius:10px;padding:16px;margin:12px 0;border:2px solid var(--line)}
+.verdict h2{font-size:1.5rem;margin:0 0 6px}
+.v-over{border-color:var(--bad);background:var(--bad-bg)}
+.v-close{border-color:var(--warn);background:var(--warn-bg)}
+.v-under{border-color:var(--ok);background:var(--ok-bg)}
+.v-none{border-color:var(--line);background:var(--card)}
+.badge{display:inline-block;font-weight:700;padding:2px 10px;border-radius:999px;border:2px solid currentColor}
+.b-green{color:var(--ok)}.b-amber{color:var(--warn)}.b-red{color:var(--bad)}
+table{width:100%;border-collapse:collapse;font-size:.95rem}
+td,th{border-bottom:1px solid var(--line);padding:6px 4px;text-align:left;vertical-align:top}
+th{font-weight:600}
+.num{text-align:right;font-variant-numeric:tabular-nums}
+.bar{position:relative;height:22px;background:var(--line);border-radius:6px;margin:8px 0 2px}
+.bar>.fill{position:absolute;left:0;top:0;bottom:0;border-radius:6px;background:var(--accent)}
+.bar>.limit{position:absolute;top:-4px;bottom:-4px;width:3px;background:var(--fg)}
+.hidden{display:none !important}
+details summary{cursor:pointer;font-weight:600;min-height:32px}
+footer{color:var(--muted);font-size:.85rem;margin:24px 0}
+@media print{button,.btn,#start,#setup,#measure,#samples,.noprint{display:none !important}body{background:#fff;color:#000}.card,.verdict{break-inside:avoid}}
+</style>
+</head>
+<body>
+<main>
+  <h1>Echo Check+</h1>
+  <p class="lede">A free room echo check for classrooms. In about 2 minutes it shows whether echo at the back row is likely a problem, and who to ask next. <strong>The audio never leaves this device.</strong></p>
+
+  <section id="start" class="card" aria-labelledby="start-h">
+    <h2 id="start-h">Start</h2>
+    <p>You need: a laptop, tablet or phone with a microphone, the rough room size, and 2 minutes with the room empty and quiet.</p>
+    <div class="row">
+      <button id="go-check">Check a room</button>
+      <button id="go-samples" class="secondary">Try a sample room</button>
+      <label class="btn secondary" for="upload">Upload a recording (WAV)</label>
+      <input id="upload" type="file" accept=".wav,audio/wav,audio/x-wav" class="hidden">
+    </div>
+    <p class="small">This is a room echo check, not a hearing test and not a compliance measurement.</p>
+  </section>
+
+  <section id="room" class="card" aria-labelledby="room-h">
+    <h2 id="room-h">1. Room size</h2>
+    <p>The US classroom limit depends on the room volume (ANSI/ASA S12.60-2010 Part 1).</p>
+    <div class="row" role="radiogroup" aria-label="Units">
+      <label><input type="radio" name="units" value="ft" checked> feet</label>
+      <label><input type="radio" name="units" value="m"> metres</label>
+    </div>
+    <div class="grid3">
+      <div><label for="len">Length</label><input id="len" type="number" min="1" step="0.1" inputmode="decimal" placeholder="30"></div>
+      <div><label for="wid">Width</label><input id="wid" type="number" min="1" step="0.1" inputmode="decimal" placeholder="25"></div>
+      <div><label for="hei">Height</label><input id="hei" type="number" min="1" step="0.1" inputmode="decimal" placeholder="10"></div>
+    </div>
+    <p id="vol-out" aria-live="polite" class="small">A typical classroom is about 30 × 25 × 10 ft = 7,500 cubic feet.</p>
+  </section>
+
+  <section id="setup" class="card hidden" aria-labelledby="setup-h">
+    <h2 id="setup-h">2. Set up</h2>
+    <ol class="steps">
+      <li><strong>Put this device on a desk in the back row,</strong> where a student sits. Keep the microphone uncovered. Point the screen toward the front so you can see the big prompts.</li>
+      <li><strong>Turn off microphone effects</strong> for this device: <span id="os-steps"></span></li>
+      <li><strong>Close other tabs and apps</strong> that use the microphone (video calls, voice assistants). If another tab holds the microphone with processing on, the browser can reuse that processed sound.</li>
+      <li><strong>Keep the room empty and quiet.</strong> Nobody talks during the check.</li>
+    </ol>
+    <p><strong>What you will do (45 s):</strong> press Start, walk quietly to the front. At about 10 s, clap 4 times, about 3 s apart. Stay quiet. At 30 s, count slowly from 1 to 20 in your normal teaching voice. The page stops by itself. It plays no sound.</p>
+    <div class="row"><button id="rec-start">Start recording (45 s)</button><button id="setup-back" class="secondary">Back</button></div>
+    <div id="setup-msg" class="msg hidden" role="alert"></div>
+  </section>
+
+  <section id="measure" class="card hidden" aria-labelledby="measure-h">
+    <h2 id="measure-h">3. Recording</h2>
+    <div id="phase" class="phase" aria-live="assertive">Walk to the front quietly</div>
+    <div id="count" class="count">45</div>
+    <div class="meter" aria-hidden="true"><div id="level"></div></div>
+    <p class="small" id="rec-info"></p>
+    <div class="row"><button id="rec-cancel" class="secondary">Cancel</button></div>
+  </section>
+
+  <section id="samples" class="card hidden" aria-labelledby="samples-h">
+    <h2 id="samples-h">Sample rooms</h2>
+    <p><strong>Simulated recordings</strong> run the full check on a computer-made recording with a known echo time. They are not real rooms.</p>
+    <div class="row">
+      <button class="secondary" data-sample="treated">Treated room (0.45 s)</button>
+      <button class="secondary" data-sample="border">Borderline room (0.62 s)</button>
+      <button class="secondary" data-sample="echoey">Echoey room (1.1 s)</button>
+      <button class="secondary" data-sample="processed">Processed microphone</button>
+    </div>
+    <h3>Real rooms, published data</h3>
+    <p class="small">Measured by researchers with professional equipment (ACE corpus: Eaton, Gaubitch, Moore and Naylor, IEEE/ACM TASLP 24(10), 2016, doi:10.1109/TASLP.2016.2577502; data doi:10.5281/zenodo.6257551). Values are the mean of the 500, 1000 and 2000 Hz 1/3-octave T20, two microphone positions. University rooms, not K-12 classrooms.</p>
+    <div id="ace"></div>
+    <div class="row"><button id="samples-back" class="secondary">Back</button></div>
+  </section>
+
+  <section id="result" class="hidden" aria-labelledby="result-h">
+    <h2 id="result-h" class="hidden">Result</h2>
+    <div id="verdict" class="verdict" role="status"></div>
+    <div class="card">
+      <h2>Echo time (T20)</h2>
+      <div id="echo"></div>
+    </div>
+    <div class="card">
+      <h2>Microphone trust <span id="badge" class="badge"></span></h2>
+      <div id="trust"></div>
+    </div>
+    <div class="card">
+      <h2>Speech margin at this seat</h2>
+      <div id="speech"></div>
+    </div>
+    <div class="card">
+      <h2>Limitations</h2>
+      <ul class="list">
+        <li>This is an estimate from hand claps at one seat. It is not a compliance measurement. Only a proper measurement in the empty, furnished room at several positions can show compliance with ANSI/ASA S12.60.</li>
+        <li><strong>This check cannot measure background noise</strong> against the 35 dBA limit in S12.60. In many classrooms, noise from heating, ventilation or corridors is the bigger problem.</li>
+        <li><strong>A pass is weak evidence.</strong> It never means a student has full access, and it must never be used to deny accommodations. Distance, seeing the speaker's face and the student's own hearing still matter.</li>
+        <li>It says nothing about anyone's hearing. It is not a clinical assessment and does not replace a Functional Listening Evaluation or an educational audiologist's review.</li>
+        <li>The page can read only the microphone settings the browser reports. It cannot read operating-system effects.</li>
+      </ul>
+    </div>
+    <div class="row noprint">
+      <button id="again">Measure again</button>
+      <button id="print" class="secondary">Print or save as PDF</button>
+      <button id="dl-json" class="secondary">Download result (JSON)</button>
+      <button id="dl-wav" class="secondary hidden">Save recording (WAV)</button>
+      <button id="home" class="secondary">Start over</button>
+    </div>
+  </section>
+
+  <footer>
+    Echo Check+ is a student project for STEMergent Hacks 2026. Method: octave bands 500/1000/2000 Hz, Schroeder integration with Lundeby-style noise handling, T20 averaged over claps; verdict on the 3-band average. Nothing is uploaded: the analysis runs in this browser.
+  </footer>
+</main>
+<script type="module" src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,19 @@
+name: engine-tests
+
+on:
+  push:
+    paths: ['engine/**', '.github/workflows/engine-tests.yml']
+  pull_request:
+    paths: ['engine/**', '.github/workflows/engine-tests.yml']
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Synthetic decay tests (within 0.05 s or 5 %)
+        run: node --test engine/test/engine.test.js
