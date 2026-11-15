@@ -6,6 +6,8 @@ Four claps in a browser tab: a classroom echo estimate against the ANSI/ASA S12.
 
 **Try it without a microphone:** open the live app and press **Try a sample room**.
 
+**Devpost entry:** https://devpost.com/software/stemurgent-placeholder · **Demo video (captioned, 2 min):** https://youtu.be/nGnA-5pFyyM
+
 Built for STEMergent Hacks 2026 by William and Kartikeya.
 
 ## 1. The problem
@@ -121,7 +123,14 @@ We always give two numbers: **false passes** and the **Incomplete rate** (no ver
 - A one-page printable room report built around the report sentence, reviewed by educational audiologists.
 - A noise check with a calibrated external microphone.
 
-## 7. Credits and disclosures
+## 7. Feasibility
+
+- **It runs today, for free:** a static web page (GitHub Pages) in Chrome on a laptop. No install, no account, no server, no running cost. Audio is analysed in the browser and never uploaded.
+- **Who can use it tomorrow:** an educational audiologist or a teacher with a laptop and the room's rough size. One check takes about 2 minutes.
+- **What it needs before wider use:** tests on more real devices (Chromebooks, phones), real classroom takes compared with a professional measurement, and a pilot with educational audiologists, who already have a reverberation step in the AAA 2011 room check.
+- **What it will not become:** a compliance measurement. It stays a screening estimate that points to a proper measurement.
+
+## 8. Credits and disclosures
 
 ### Experts consulted
 
