@@ -202,3 +202,45 @@ test('a band over the limit never lets the verdict read Under', () => {
   assert.equal(a.verdict, 'Too close to call', a.reasons.join(' | '));
   assert.ok(a.reasons.some((m) => m.includes('500 Hz band')));
 });
+
+
+// ---- New tests proposed by the engine review (2026-11-15) ----
+
+test('44.1 kHz: clap times are found within 20 ms of the true clap', () => {
+  const { fs, x } = synth({ fs: 44100, T60: 0.6, seed: 11 });
+  const res = E.analyse(x, fs);
+  assert.equal(res.claps.length, 4);
+  res.clapTimesS.forEach((t, k) => assert.ok(Math.abs(t - [12, 15, 18, 21][k]) < 0.02, `clap ${k + 1} at ${t}`));
+});
+
+test('44.1 kHz: a short clipped clap peak blocks the verdict', () => {
+  const { fs, x } = synth({ fs: 44100, T60: 0.6, seed: 9 });
+  for (const tc of [12, 15, 18, 21]) { const i0 = Math.round(tc * fs); for (let k = 0; k < 5; k++) x[i0 + k] = k % 2 ? -1 : 32767 / 32768; }
+  const a = E.assess(E.analyse(x, fs), { volumeFt3: 8000, reported: NO_PROCESSING });
+  assert.equal(a.verdict, 'Blocked');
+});
+
+test('an invalid sample (NaN) gives a clear error, not "no claps heard"', () => {
+  const { fs, x } = synth({ T60: 0.6, seed: 3 });
+  x[Math.round(16.5 * fs)] = NaN;
+  assert.throws(() => E.analyse(x, fs), /invalid sample/);
+});
+
+test('"too quiet" reason never says best >= need', () => {
+  const mk = (cleans, t20s) => ({ speechMarginDb: null, claps: cleans.map((cl, k) => ({ clipRun: 0, bands: Object.fromEntries(E.BANDS.map((fc) => [fc, { cleanDecayDb: cl, T20: t20s[k], floorResidDb: 0, EDT: null }])) })) });
+  for (const [cleans, t20s] of [[[34, 25, 25, 25], [0.5, 0.5, 0.5, 0.5]], [[29.6, 25, 25, 25], [0.5, 0.5, 0.5, 0.5]], [[31, 31, 20, 20], [0.5, null, 0.5, 0.5]]]) {
+    const a = E.assess(mk(cleans, t20s), { volumeFt3: 8000, reported: NO_PROCESSING });
+    const m = a.reasons.find((r) => r.startsWith('The claps were too quiet'));
+    assert.ok(m, a.reasons.join(' | '));
+    const best = /best (\d+) dB, need (\d+) dB/.exec(m);
+    if (best) assert.ok(Number(best[1]) < Number(best[2]), m);
+  }
+});
+
+
+test('a bent decay with a slow late part near the background never reads Under', () => {
+  // Reference T20 of this decay (noise-free, ISO-style) is 0.995 s. The shipped engine read 0.494 s "Under".
+  const { fs, x } = synth({ T60: 0.3, second: { T60: 1.6, levelDb: -20 }, amp: 0.3, noiseDb: -44, seed: 401 });
+  const a = E.assess(E.analyse(x, fs), { volumeFt3: 8000, reported: NO_PROCESSING });
+  assert.notEqual(a.verdict, 'Under the limit (weak evidence)', `avg ${a.avgT20}`);
+});

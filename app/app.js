@@ -114,6 +114,7 @@ async function startRecording() {
     r.t0 = performance.now();
     r.running = true;
     show('measure');
+    $('measure-h').focus?.();
     $('rec-info').textContent = `Microphone: ${r.track.label || 'unknown'} · ${r.fs} Hz · ${r.method}`;
     r.timer = setInterval(() => tick(r), 100);
   } catch (e) {
@@ -138,7 +139,11 @@ function tick(r) {
   const t = (performance.now() - r.t0) / 1000;
   let ph = '';
   for (const [s, txt] of PHASES) if (t >= s) ph = txt;
-  if ($('phase').textContent !== ph) $('phase').textContent = ph;
+  if ($('phase').textContent !== ph) {
+    $('phase').textContent = ph;
+    // Screen readers: announce only the main cues, not every 3-2-1 step (static accessibility check, Sun).
+    if (!/ in [321]…$/.test(ph)) $('cue').textContent = ph;
+  }
   $('count').textContent = Math.max(0, Math.ceil(DURATION_S - t));
   const d = 20 * Math.log10(Math.max(r.blockPeak, 1e-9)); r.blockPeak = 0;
   $('level').style.width = Math.max(0, Math.min(100, ((d + 60) / 60) * 100)) + '%';

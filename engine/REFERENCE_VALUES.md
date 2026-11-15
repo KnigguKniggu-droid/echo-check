@@ -4,7 +4,7 @@ Written by the Partner session, Friday 2026-11-13, about 21:10 CST. README Phase
 
 ## 1. Engine against synthetic decays (CI test)
 
-`node --test engine/test/engine.test.js`: **22 of 22 pass** (re-run Sun 2026-11-15 07:05 CST; 16 on Friday, 22 after the Saturday additions). Pass rule: every band T20 within 0.05 s or 5 % of the true T60, whichever is larger.
+`node --test engine/test/engine.test.js`: **27 of 27 pass** (re-run Sun 2026-11-15 13:35 CST; 16 on Friday, 22 after the Saturday additions, 27 after the Sunday engine review, §12). Pass rule: every band T20 within 0.05 s or 5 % of the true T60, whichever is larger.
 
 | What is tested | Result |
 |---|---|
@@ -297,3 +297,27 @@ An architectural-acoustics graduate student asked how much our median over claps
 | Our real home take, processing off (Friday) | 1 | −1.0 % (0.412 → 0.408 s). At 500 Hz one clap read 0.32 s against 0.38–0.39 s for the others, so the mean is 2.7 % lower there | — | 0 |
 
 **Reading:** with simulated claps the two rules agree within about 1 %. With real claps, one odd clap moves the mean more than the median, which is why the engine keeps the median. The difference is far inside the ±15 % "Too close to call" zone. Not tested: many real takes.
+
+## 12. Independent engine review and fixes (Sun 2026-11-15)
+
+**What was run:** a reviewer agent briefed as a room-acoustics measurement expert (ISO 3382-2, IEC 61260-1, Lundeby 1995, JCGM 106) attacked `engine/echo-engine.js` with 380+ adversarial synthetic takes (two-slope and flutter decays, double claps, DC, hum, rumble, near-clipping, 44.1 kHz, late peaks, short rooms). Full report: Partner's `private/audit/ENGINE_REVIEW.md`.
+
+**Found and fixed (commit after `c0ad6cd`; 5 new tests fail on the old engine and pass on the new one; 27 of 27 pass):**
+
+| Finding | Effect on the old engine | Fix |
+|---|---|---|
+| **False pass on two-slope decays.** The single-pass noise cut-off fell while a slow late decay was still above the background | T20 read 20–62 % short; 17 of 380 adversarial takes read "Under" for rooms over the limit, all at lower confidence (30–37 dB of clean decay). Example: true T20 0.995 s, engine 0.494 s "Under". It also explains the 2 simulated-classroom false passes of §7 (not "late decay below the background" as §7 first said) | **Tail guard:** at lower confidence, if at least half of a band's used claps still have echo energy more than 3 dB above the background in the 300 ms after the cut-off, "Under" becomes "Too close to call". It can never create an "Under" |
+| **44.1 kHz clap timing.** `detectClaps` assumed 1,000 frames per second; at 44.1 kHz a frame is 44 samples | Clap times 20–57 ms late; short clipping at the clap missed; clean decay 8–14 dB low (more Incomplete) | Frames per second = `fs / hop`. Identical results at 48 kHz |
+| One NaN or infinite sample | Read as "No claps were heard" | Clear error naming the time of the bad sample |
+| Reason wording "best 34 dB, need 30 dB" | Contradictory when one clap passed but a second was missing | Says how many claps reached 30 dB and how many are needed |
+
+**Regression check (same takes, old vs new engine):**
+
+| Set | Takes | Verdict changes | Echo-time change | False passes old → new |
+|---|---|---|---|---|
+| Simulated claps in 3 measured rooms (§10, 86/92/98 dB) | 540 | 0 | 0 | 0 → 0 |
+| MIT IR Survey, both setups (§6, §9) | 206 | 0 | 0 | 0 → 0 |
+| Simulated classrooms (§10, 86/92/98 dB) | 1,053 | 4, all "Under" → "Too close to call" | 0 | **2 → 0** (the other 2 changes were correct "Under" results that now read "Too close to call") |
+| Real app in headless Chrome, 3 ACE takes × processing off/on | 6 | 0 | — | — |
+
+**Still open (not fixed):** some extreme two-slope cases (late decay within about 16 dB of the background) still pass the guard (9 of the 17 adversarial false passes remain in the reviewer's grid); "clean decay" is measured from the direct-sound peak, not the decay's own range; a background 2–5 dB louder before the clap than during the decay biases T20 short by 3–8 %. This is why "Under" stays "weak evidence".

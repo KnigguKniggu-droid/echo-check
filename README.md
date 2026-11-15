@@ -61,17 +61,17 @@ The result page also shows the speech margin at the seat (empty room, best case)
 6. **Echo time:** T20 by linear regression from −5 to −25 dB; EDT from 0 to −10 dB.
 7. **Quality gates:** 37 dB of clean decay or more: full confidence; 30–37 dB: lower confidence; under 30 dB: not used. Each band value is the median T20 of the usable claps among the first four detected.
 8. **Trust checks in the audio:** clipping (red); the background drops after 2 or more claps, a noise-gate sign (red). Amber: clap spread over 10 %, a rising background, an implausibly high speech margin, a phone or tablet.
-9. **Verdict:** the 3-band average against 0.6 s or 0.7 s (by room volume), with the ±15 % zone, the per-band guard and the one-way early-decay rule. A room over 20,000 ft³ gets echo times but no verdict.
+9. **Verdict:** the 3-band average against 0.6 s or 0.7 s (by room volume), with the ±15 % zone, the per-band guard, the one-way early-decay rule, and a tail guard: at lower confidence, if a slow late echo is still above the background after the noise cut-off, "Under" becomes "Too close to call" (added after an independent engine review on 15 November found a false pass on two-slope decays; a test now covers it). A room over 20,000 ft³ gets echo times but no verdict.
 10. **Output:** verdict and next step, per-band echo times with the ±15 % zone drawn on the bar, trust badge, speech margin, report sentence, print and JSON download.
 
-The engine is about 580 lines of dependency-free JavaScript (`engine/echo-engine.js`) with 22 automated tests. Run them with `node --test engine/test/engine.test.js`. To run the app locally, serve the repository root with any static web server and open `/app/` on `localhost` (the browser allows the microphone only on `localhost` or HTTPS).
+The engine is about 580 lines of dependency-free JavaScript (`engine/echo-engine.js`) with 27 automated tests. Run them with `node --test engine/test/engine.test.js`. To run the app locally, serve the repository root with any static web server and open `/app/` on `localhost` (the browser allows the microphone only on `localhost` or HTTPS).
 
 ### Repository map (this public copy)
 
 | Folder | Contents |
 |---|---|
 | `app/` | The web page (`index.html`, `app.js`). No libraries, no build step. |
-| `engine/` | `echo-engine.js` (analysis, trust checks, verdict); `synth.js` (the simulated sample recordings); `cli.js` (checks a WAV file from the command line); `test/` (the 22 tests); `REFERENCE_VALUES.md` (every test result in this README, with method and caveats). |
+| `engine/` | `echo-engine.js` (analysis, trust checks, verdict); `synth.js` (the simulated sample recordings); `cli.js` (checks a WAV file from the command line); `test/` (the 27 tests); `REFERENCE_VALUES.md` (every test result in this README, with method and caveats). |
 | `recorder/` | A test page that records one take and saves it with the settings the browser reports. For device tests. |
 | `version.txt` | Which commit of the team repository is live. |
 
@@ -93,7 +93,7 @@ We always give two numbers: **false passes** and the **Incomplete rate** (no ver
 
 **Checks of the maths and of the real take:**
 
-- 22 of 22 automated tests pass on synthetic decays with known answers (re-run 2026-11-15).
+- 22 of 27 automated tests pass on synthetic decays with known answers (re-run 2026-11-15).
 - pyrato (pyfar), an independent open-source implementation, on our real home take: 3-band average 0.412 s (ours) vs 0.398 s (pyrato), a 3.5 % difference; single bands differ by up to 8.6 %.
 - The same home test with the browser's processing on gave "Blocked".
 - The 28 headless-Chrome runs on the live HTTPS site gave verdicts identical to the local run.
@@ -106,7 +106,8 @@ We always give two numbers: **false passes** and the **Incomplete rate** (no ver
 - **Devices and browsers:** real microphones beyond that 1 device are untested. Our browser tests used Chrome.
 - **Operating-system processing:** the page cannot see it (for example Windows Voice Clarity). The page lists the settings and relies on the user to turn them off.
 - **Rooms under the limit:** only the ACE and MIT tests contain them. All 3 HOMULA-RIR and PAN-AR rooms are over the limit.
-- **Seat distance:** both simulated false passes came from a seat 1.8 m from the clapper. The page asks for 3–5 m, but it cannot measure the distance.
+- **Two-slope decays:** an engine review found that a fast early decay followed by a slow late one can make T20 read short at lower confidence. The tail guard catches most such cases, not all, so "Under" stays "weak evidence".
+- **Seat distance:** both simulated false passes (before the tail guard) came from a seat 1.8 m from the clapper; with the guard, 0 in the 86/92/98 dB set. The page asks for 3–5 m, but it cannot measure the distance.
 - **No answer is common in hard conditions:** far from the clapper or with the ventilation running, the result is often "Incomplete" (HOMULA-RIR: 12 of 50 seat responses gave a verdict at 45 dBA). Incomplete is safe, but it gives no answer.
 - **One seat, empty room:** the AAA guideline uses five positions. Occupied rooms are untested.
 - **Not measured:** background noise against the 35 dBA limit (a laptop microphone is not calibrated), and noise is often the bigger problem. The check compares with the 0.6 s or 0.7 s limit, not the stricter 0.3 s provision for students with hearing loss.

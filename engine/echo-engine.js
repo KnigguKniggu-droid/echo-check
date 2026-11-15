@@ -43,6 +43,7 @@ export const DEFAULTS = {
   edtRescue: true,
   edtRescueFactor: 1.3,       // 3-band EDT average >= 1.3 x limit, and every band >= the limit
   edtRescueMinDb: 20,         // claps with at least this much clean decay; minClapsPerBand per band
+  tailExcessDb: 3,            // echo energy after the cut-off point above the background (dB) that blocks "Under"
 };
 
 // ---------- small numeric helpers ----------
@@ -247,10 +248,13 @@ export function detectClaps(x, fs, [t0, t1] = DEFAULTS.clapWindowS) {
   const nf = Math.ceil(L.length / hop);
   const Lf = new Float64Array(nf);
   for (let j = 0; j < nf; j++) Lf[j] = db(L[j * hop]);
-  const base = median(Lf.subarray(Math.trunc(t0 * 1000), Math.trunc(t1 * 1000)));
+  // Frames per second. hop is a whole number of samples: at 44.1 kHz a frame is 44 samples (0.998 ms), so
+  // p / 1000 put every clap 20-57 ms late. At 48 kHz fps is exactly 1000 (results unchanged).
+  const fps = fs / hop;
+  const base = median(Lf.subarray(Math.trunc(t0 * fps), Math.trunc(t1 * fps)));
   const claps = [];
   for (const p of findPeaks(Lf, base + 25, 1000)) {
-    const t = p / 1000;
+    const t = p / fps;
     if (t < t0 || t > t1) continue;
     // Impulsive: >= 15 dB rise within the 100 ms before the envelope peak. Far from the clapper in an echoey
     // room the envelope keeps rising for 30-50 ms after the direct sound (reflections add up), so the old
@@ -323,7 +327,13 @@ export function decayAnalysis(e, fs, ip, end, N) {
     const f = linfit(xs, ys);
     EDT = f.slope < 0 ? -60 / f.slope : null;
   }
-  return { T20, r20, T30, EDT, edcBottomDb: minDb, truncS: ic / fs, lundebyT: -60 / slope };
+  // Energy in the 300 ms after the cut-off point, relative to the background. After a correct cut-off the decay
+  // is below the background, so this stays under about 1.5 dB. A slow late decay that the single-pass fit missed
+  // leaves several dB here (engine review 2026-11-15: double-slope false passes).
+  let tailExcessDb = null;
+  const wT = Math.min(Math.trunc(0.3 * fs), len - ic);
+  if (wT >= Math.trunc(0.1 * fs)) { let s = 0; for (let i = ic; i < ic + wT; i++) s += e[ip + i]; tailExcessDb = db(s / wT) - Nd; }
+  return { T20, r20, T30, EDT, edcBottomDb: minDb, truncS: ic / fs, lundebyT: -60 / slope, tailExcessDb };
 }
 
 /**
@@ -332,6 +342,8 @@ export function decayAnalysis(e, fs, ip, end, N) {
  */
 export function analyse(x, fs, opts = {}) {
   const o = { ...DEFAULTS, ...opts };
+  // One NaN or infinite sample spreads through every IIR filter and reads as "no claps heard". Say what it is.
+  for (let i = 0; i < x.length; i++) if (!Number.isFinite(x[i])) throw new Error(`the recording contains an invalid sample at ${(i / fs).toFixed(3)} s`);
   const { claps, baseDb } = detectClaps(x, fs, o.clapWindowS);
   const bands = {};
   for (const fc of BANDS) bands[fc] = square(sosfilt(octaveBand(fc, fs), x));
@@ -527,7 +539,12 @@ export function assess(result, ctx = {}, opts = {}) {
     if (!result.claps.length) reasons.push('No claps were heard clearly above the background noise. Make the room quieter (switch off fans and the projector, and the ventilation if you are allowed to), clap louder with cupped hands, or test a seat closer to the front (about 3 to 5 m, 10 to 16 ft, from where you clap).');
     else if (weak.length) {
       const best = Math.max(...weak.flatMap((fc) => result.claps.map((c) => c.bands[fc].cleanDecayDb).filter((v) => Number.isFinite(v))));
-      reasons.push(`The claps were too quiet above the background at this seat${Number.isFinite(best) ? ` (best ${Math.round(best)} dB, need ${o.cleanMinDb} dB)` : ''}. Make the room quieter (switch off fans and the projector, and the ventilation if you are allowed to), clap louder with cupped hands, or test a seat closer to the front (about 3 to 5 m, 10 to 16 ft, from where you clap).`);
+      // Round down, and do not print "best 34 dB, need 30 dB": when the best clap passed, too few claps passed.
+      const nOk = Math.min(...weak.map((fc) => bandN[fc]));
+      const detail = !Number.isFinite(best) ? ''
+        : best < o.cleanMinDb ? ` (best ${Math.floor(best)} dB, need ${o.cleanMinDb} dB)`
+        : ` (only ${nOk} clap${nOk === 1 ? '' : 's'} gave ${o.cleanMinDb} dB of clean decay; ${o.minClapsPerBand} are needed)`;
+      reasons.push(`The claps were too quiet above the background at this seat${detail}. Make the room quieter (switch off fans and the projector, and the ventilation if you are allowed to), clap louder with cupped hands, or test a seat closer to the front (about 3 to 5 m, 10 to 16 ft, from where you clap).`);
     }
     if (loudButShort.length) reasons.push(`In the ${loudButShort.join(' and ')} Hz band the claps were loud, but the room's echo faded into the background too soon. Clap from the front of the room, not near the device, and keep the room quiet.`);
   }
@@ -541,6 +558,19 @@ export function assess(result, ctx = {}, opts = {}) {
     if (verdict === 'Under the limit (weak evidence)' && over.length) {
       verdict = 'Too close to call';
       reasons.push(`The average is under the limit, but the ${over.join(' and ')} Hz band${over.length > 1 ? 's are' : ' is'} over it`);
+    }
+    // A slow late decay can sit just above the background. The single-pass cut-off then comes too early and T20
+    // reads short (engine review 2026-11-15). If at least half of the claps used in a band still had echo energy
+    // above the background after the cut-off, the result must not read "Under". Lower confidence only (30-37 dB):
+    // every false pass in the review had less than 37 dB of clean decay in at least one clap.
+    const cut = !lowerConfidence ? [] : BANDS.filter((fc) => {
+      const used = usable.map((c) => c.bands[fc]).filter((b) => b.T20 && b.cleanDecayDb !== null && b.cleanDecayDb >= o.cleanMinDb);
+      const n = used.filter((b) => b.tailExcessDb !== null && b.tailExcessDb !== undefined && b.tailExcessDb > o.tailExcessDb).length;
+      return used.length && n * 2 >= used.length;
+    });
+    if (verdict === 'Under the limit (weak evidence)' && cut.length) {
+      verdict = 'Too close to call';
+      reasons.push(`The average is under the limit, but in the ${cut.join(' and ')} Hz band${cut.length > 1 ? 's' : ''} a slow late echo was still above the background noise, so the echo time may read short. A quieter room gives a full measurement.`);
     }
   }
 
