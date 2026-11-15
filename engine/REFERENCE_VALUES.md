@@ -318,6 +318,7 @@ An architectural-acoustics graduate student asked how much our median over claps
 | Simulated claps in 3 measured rooms (§10, 86/92/98 dB) | 540 | 0 | 0 | 0 → 0 |
 | MIT IR Survey, both setups (§6, §9) | 206 | 0 | 0 | 0 → 0 |
 | Simulated classrooms (§10, 86/92/98 dB) | 1,053 | 4, all "Under" → "Too close to call" | 0 | **2 → 0** (the other 2 changes were correct "Under" results that now read "Too close to call") |
+| Simulated classrooms (§7, 74/80/86 dB) | 1,053 | 2, both "Under" → "Too close to call" | 0 | **2 → 0** (both changes were the false passes) |
 | Real app in headless Chrome, 3 ACE takes × processing off/on | 6 | 0 | — | — |
 
 **Still open (not fixed):** some extreme two-slope cases (late decay within about 16 dB of the background) still pass the guard (9 of the 17 adversarial false passes remain in the reviewer's grid); "clean decay" is measured from the direct-sound peak, not the decay's own range; a background 2–5 dB louder before the clap than during the decay biases T20 short by 3–8 %. This is why "Under" stays "weak evidence".
