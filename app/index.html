@@ -80,7 +80,7 @@ footer{color:var(--muted);font-size:.85rem;margin:24px 0}
         <li><strong>"Under the limit"</strong> only with a margin: the 3-band average more than 15 % below the limit, and no band over it. Quiet claps can still say "Likely over", never "Under".</li>
       </ul>
     </div>
-    <p class="small">This is a room echo check, not a hearing test and not acompliance measurement.</p>
+    <p class="small">This is a room echo check, not a hearing test and not a compliance measurement.</p>
   </section>
 
   <section id="room" class="card" aria-labelledby="room-h">
@@ -108,7 +108,8 @@ footer{color:var(--muted);font-size:.85rem;margin:24px 0}
     </ol>
     <p><label for="hvac"><strong>Ventilation during the check</strong> (saved with the result):</label>
       <select id="hvac"><option value="unknown">Not sure</option><option value="off">Paused / off</option><option value="on">Running</option></select></p>
-    <p><strong>What you will do (45 s):</strong> press Start, walk quietly to the front. At about 10 s, clap 4 times, about 3 s apart, with cupped hands and as loud as you comfortably can (practise a few loud claps first: louder claps give a result more often). Stay quiet. At 30 s, count slowly from 1 to 20 in your normal teaching voice. The page stops by itself. It plays no sound.</p>
+    <p><strong>Why:</strong> the claps show how long sound keeps echoing in the room. The counting shows how far a teaching voice stands above the room's background noise at this seat.</p>
+    <p><strong>What you will do (45 s; the counter on the next screen counts down):</strong> press Start and walk quietly to the front. At about <strong>36</strong> on the counter, the page counts you in: "Clap 1 in 3… 2… 1… CLAP NOW". It does this 4 times, 4 s apart. Clap each time with cupped hands, as loud as you comfortably can (practise a few loud claps first: louder claps give a result more often). Stay quiet between claps. From <strong>15</strong> to <strong>5</strong> on the counter, count slowly from 1 to 20 in your normal teaching voice, and stop when the page says "Stop talking", even if you have not reached 20. The page stops by itself. It plays no sound.</p>
     <div class="row"><button id="rec-start">Start recording (45 s)</button><button id="setup-back" class="secondary">Back</button></div>
     <div id="setup-msg" class="msg hidden" role="alert"></div>
   </section>
@@ -157,6 +158,7 @@ footer{color:var(--muted);font-size:.85rem;margin:24px 0}
     </div>
     <div class="card">
       <h2>Echo time (T20)</h2>
+      <p class="small">Echo time is how long a sound takes to fade away in the room (the time for a 60 dB drop, estimated from the first 20 dB of the fade). Shorter is better for hearing speech. The US classroom standard asks for 0.6 s or less in most classrooms.</p>
       <div id="echo"></div>
     </div>
     <div class="card">

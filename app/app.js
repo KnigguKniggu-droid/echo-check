@@ -51,7 +51,15 @@ $('print').addEventListener('click', () => window.print());
 
 // ---------- recording ----------
 const DURATION_S = 45;
-const PHASES = [[0, 'Walk to the front quietly'], [9, 'Get ready to clap'], [10, 'Clap 4 times, 3 s apart: cupped hands, loud'], [24, 'Stay quiet'], [30, 'Count slowly from 1 to 20'], [41, 'Stay quiet. Finishing']];
+// Guided claps, 4 s apart (RPI architectural-acoustics student review, Sun 2026-11-15): each clap is cued, and each
+// decay window is more than twice a long classroom echo time. Claps fall at about 12, 16, 20 and 24 s, inside the
+// engine's clap window (DEFAULTS.clapWindowS = [9, 29.5]). Speech 30-40 s, inside DEFAULTS.speechWindowS = [30, 41].
+const PHASES = [[0, 'Walk to the front quietly'], [8, 'Get ready: cupped hands']];
+for (let k = 0; k < 4; k++) {
+  const t0 = 12 + 4 * k;
+  PHASES.push([t0 - 3, `Clap ${k + 1} of 4 in 3…`], [t0 - 2, `Clap ${k + 1} of 4 in 2…`], [t0 - 1, `Clap ${k + 1} of 4 in 1…`], [t0, `CLAP NOW (${k + 1} of 4)`]);
+}
+PHASES.push([25, 'Stay quiet'], [30, 'Count slowly from 1 to 20'], [40, 'Stop talking. Stay quiet'], [42, 'Stay quiet. Finishing']);
 const WORKLET = "class Rec extends AudioWorkletProcessor{process(i){const c=i[0]&&i[0][0];if(c&&c.length)this.port.postMessage(c.slice(0));return true}}registerProcessor('rec',Rec);";
 let rec = null;
 
@@ -363,7 +371,7 @@ function renderResult(res, meta) {
   $('trust').innerHTML = (a.red.length ? `<p><strong>Problems:</strong></p><ul class="list">${a.red.map((m) => `<li>${esc(m)}</li>`).join('')}</ul>` : '')
     + (a.amber.length ? `<p><strong>Warnings:</strong></p><ul class="list">${a.amber.map((m) => `<li>${esc(m)}</li>`).join('')}</ul>` : '')
     + (!a.red.length && !a.amber.length ? '<p>Browser processing: off (as reported by the browser). No signs of processing found in the audio.</p>' : '')
-    + `<p class="small">${a.notes.map(esc).join(' ')}</p>`
+    + `<p class="small">${a.notes.map((n) => esc(/[.!?]$/.test(n) ? n : n + '.')).join(' ')}</p>`
     + (flags ? `<details><summary>What the browser reports</summary><table>${flags}</table>${meta.microphone ? `<p class="small">Microphone: ${esc(meta.microphone)}</p>` : ''}</details>` : '');
 
   // Speech margin
