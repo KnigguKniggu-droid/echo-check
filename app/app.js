@@ -35,7 +35,7 @@ function osSteps() {
   if (/iPhone|iPad/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1)) return 'on an iPhone or iPad, a web page cannot turn off all voice processing. Use a laptop if you can. If Control Centre shows Mic Mode, choose Standard.';
   if (/Android/.test(ua)) return 'on Android, a web page cannot see phone-maker audio effects. Use a laptop if you can.';
   if (/Macintosh/.test(ua)) return 'on a Mac, while this page uses the microphone, open Control Centre → Mic Mode and choose Standard.';
-  if (/Windows/.test(ua)) return 'on Windows, open Settings → System → Sound → your microphone, and turn off Audio enhancements and Voice clarity (if shown).';
+  if (/Windows/.test(ua)) return 'on Windows, open Settings → System → Sound → your microphone, and turn off Audio enhancements and Voice clarity (if shown). Microsoft says Voice clarity reduces reverberation, which would make the room look less echoey than it is.';
   return 'turn off noise cancellation or voice effects in this device\'s sound settings.';
 }
 $('os-steps').textContent = osSteps();
@@ -265,18 +265,31 @@ function platformAmber() {
 function reportSentence(a, meta, v) {
   const lim = a.limitS;
   if (!lim || !['Likely over the limit', 'Too close to call', 'Under the limit (weak evidence)'].includes(a.verdict)) return null;
-  const when = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+  const d = meta.startedAt ? new Date(meta.startedAt) : new Date();
+  const when = (Number.isNaN(d.getTime()) ? new Date() : d).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
   const size = v ? `about ${Math.round(v).toLocaleString('en-US')} cubic feet` : 'this size';
   const head = (meta.source === 'simulated' ? 'SAMPLE RECORDING, NOT A REAL ROOM. ' : '')
     + `Room echo check (Echo Check+, ${when}), from hand claps recorded at one seat: `;
-  const lims = `the ANSI/ASA S12.60 recommended limit of ${lim} s for a classroom of ${size}`;
-  const tail = ' Background noise was not assessed. This is an estimate from a quick room check, not a compliance measurement.';
+  const lims = `the ANSI/ASA S12.60-2010 Part 1 recommended maximum of ${lim} s for an unoccupied, furnished classroom of ${size}`;
+  const tail = (a.badge === 'amber' ? ' Microphone check: amber (see the full result).' : '')
+    + ' Background noise was not assessed. This is an estimate from a quick room check, not a compliance measurement.';
   if (a.verdict === 'Likely over the limit' && a.basis === 'EDT')
     return head + `the early decay time (EDT, average of 500, 1000 and 2000 Hz) was ${fmt(a.avgEDT)} s, so the reverberation time is likely above ${lims} (lower confidence). A professional measurement is recommended.` + tail;
-  const t = `the estimated reverberation time (T20, average of 500, 1000 and 2000 Hz) was ${fmt(a.avgT20)} s`;
+  const perBand = BANDS.every((fc) => Number.isFinite(a.bandT20[fc])) ? ` (${BANDS.map((fc) => fmt(a.bandT20[fc])).join(' / ')} s at 500 / 1000 / 2000 Hz)` : '';
+  const t = `the estimated reverberation time (T20, average of 500, 1000 and 2000 Hz) was ${fmt(a.avgT20)} s${perBand}${a.confidence === 'lower' ? ' (lower confidence)' : ''}`;
+  // S12.60-2010 also asks that rooms of 10,000 ft3 or less be readily adaptable to 0.3 s for students with hearing loss
+  // (AAA position statement 2011; Iglehart 2016; research/STANDARDS_AND_AT_EVALUATION.md). The check does not test that.
+  const small = lim === 0.6 ? ' It does not check the standard\'s provision that such rooms be adaptable to 0.3 s for students with hearing loss.' : '';
   if (a.verdict === 'Likely over the limit') return head + `${t}, likely above ${lims}. A professional measurement is recommended.` + tail;
-  if (a.verdict === 'Too close to call') return head + `${t}, within 15 % of ${lims}; the check cannot tell which side of the limit the room is on. A professional measurement is recommended.` + tail;
-  return head + `${t}, below ${lims}. This is weak evidence: it must not be used to deny accommodations.` + tail;
+  if (a.verdict === 'Too close to call') {
+    // Two ways to get here (engine/echo-engine.js decide() and the per-band guard): the average is within ±15 % of the
+    // limit, or the average is lower but at least one band is over the limit.
+    const overBands = BANDS.filter((fc) => a.bandT20[fc] > lim);
+    if (a.avgT20 < lim * 0.85 && overBands.length)
+      return head + `${t}, below ${lims}, but the ${overBands.join(' and ')} Hz band${overBands.length > 1 ? 's were' : ' was'} above that limit, so the check cannot say the room is under it. A professional measurement is recommended.` + tail;
+    return head + `${t}, within 15 % of ${lims}; the check cannot tell which side of the limit the room is on. A professional measurement is recommended.` + tail;
+  }
+  return head + `${t}, below ${lims}. This is weak evidence: it must not be used to deny accommodations.${small}` + tail;
 }
 
 function renderResult(res, meta) {
@@ -321,7 +334,7 @@ function renderResult(res, meta) {
     : '';
   $('echo').innerHTML = `${edtNote}<p><strong>3-band average: ${fmt(a.avgT20)} s</strong>${lim ? ` · limit ${lim} s (${v ? Math.round(v).toLocaleString('en-US') : '—'} cubic feet)` : ''}${a.confidence && a.basis !== 'EDT' ? ` · ${a.confidence === 'full' ? 'full confidence' : 'lower confidence (30–37 dB of clean decay)'}` : ''}</p>${bar}
     <table><thead><tr><th>Band</th><th class="num">T20</th><th class="num">Claps used</th><th class="num">Least clean decay</th></tr></thead><tbody>${rows}</tbody></table>
-    <p class="small">Claps found: ${res.claps.length} (the first 4 are used). "Too close to call" means within ±15 % of the limit.${a.spread !== null ? ` Clap-to-clap spread: ${Math.round(a.spread * 100)} %.` : ''}</p>`;
+    <p class="small">Claps found: ${res.claps.length} (the first 4 are used). "Too close to call" means within ±15 % of the limit, or under it on average with one band over it.${a.spread !== null ? ` Clap-to-clap spread: ${Math.round(a.spread * 100)} %.` : ''}</p>`;
 
   // Trust
   $('badge').className = `badge b-${a.badge}`;
