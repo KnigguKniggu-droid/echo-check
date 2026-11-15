@@ -64,7 +64,7 @@ The result page also shows the speech margin at the seat (empty room, best case)
 9. **Verdict:** the 3-band average against 0.6 s or 0.7 s (by room volume), with the ±15 % zone, the per-band guard, the one-way early-decay rule, and a tail guard: at lower confidence, if a slow late echo is still above the background after the noise cut-off, "Under" becomes "Too close to call" (added after an independent engine review on 15 November found a false pass on two-slope decays; a test now covers it). A room over 20,000 ft³ gets echo times but no verdict.
 10. **Output:** verdict and next step, per-band echo times with the ±15 % zone drawn on the bar, trust badge, speech margin, report sentence, print and JSON download.
 
-The engine is about 580 lines of dependency-free JavaScript (`engine/echo-engine.js`) with 27 automated tests. Run them with `node --test engine/test/engine.test.js`. To run the app locally, serve the repository root with any static web server and open `/app/` on `localhost` (the browser allows the microphone only on `localhost` or HTTPS).
+The engine is about 615 lines of dependency-free JavaScript (`engine/echo-engine.js`) with 27 automated tests. Run them with `node --test engine/test/engine.test.js`. To run the app locally, serve the repository root with any static web server and open `/app/` on `localhost` (the browser allows the microphone only on `localhost` or HTTPS).
 
 ### Repository map (this public copy)
 
@@ -93,7 +93,7 @@ We always give two numbers: **false passes** and the **Incomplete rate** (no ver
 
 **Checks of the maths and of the real take:**
 
-- 22 of 27 automated tests pass on synthetic decays with known answers (re-run 2026-11-15).
+- 27 of 27 automated tests pass on synthetic decays with known answers (re-run 2026-11-15).
 - pyrato (pyfar), an independent open-source implementation, on our real home take: 3-band average 0.412 s (ours) vs 0.398 s (pyrato), a 3.5 % difference; single bands differ by up to 8.6 %.
 - The same home test with the browser's processing on gave "Blocked".
 - The 28 headless-Chrome runs on the live HTTPS site gave verdicts identical to the local run.

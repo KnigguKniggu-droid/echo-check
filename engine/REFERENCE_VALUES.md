@@ -272,7 +272,7 @@ Written by the Partner session, Friday 2026-11-13, about 21:10 CST. README Phase
 | ACE takes (processing off) | 14 | 2 → 2 | 0 → 0 | 1 (0) | 3.2 % (11) | 0 |
 | MIT harsh / back-row-like | 102 / 102 | 35 → 35 / 2 → 2 | 0 → 0 | 10 (0) / 0 | 2.0 % / 5.9 % | 0 |
 
-**Current picture (fixed engine, realistic clap):**
+**Current picture (fixed engine, realistic clap; see §12: after the Sunday tail guard the simulated false passes are 0 in both clap sets):**
 
 | Where (verdicts, including early-decay "Likely over") | Clap | 35 dBA (ventilation off) | 45 dBA (ventilation on, typical) | 50 dBA |
 |---|---|---|---|---|
@@ -289,7 +289,7 @@ Written by the Partner session, Friday 2026-11-13, about 21:10 CST. README Phase
 
 ## 11. Median or mean over claps? (reviewer question, Sun 2026-11-15)
 
-An architectural-acoustics graduate student asked how much our median over claps differs from the arithmetic mean that ISO 3382-2 uses for repeated measurements. Same usable claps (first 4 detected, at least 30 dB of clean decay), both rules, nothing else changed. Scripts: `median_vs_mean.mjs` and `mm_home.mjs` (Partner scratchpad; logic described here).
+An architectural-acoustics graduate student asked how much our median over claps differs from the arithmetic mean that ISO 3382-2 uses for repeated measurements. Same usable claps (first 4 detected, at least 30 dB of clean decay), both rules, nothing else changed. The comparison scripts are not published; the method is described here.
 
 | Data | Takes with a T20 verdict | Mean vs median, 3-band average | Error against the pyrato reference (median rule / mean rule) | Verdict-zone changes |
 |---|---|---|---|---|
@@ -300,7 +300,7 @@ An architectural-acoustics graduate student asked how much our median over claps
 
 ## 12. Independent engine review and fixes (Sun 2026-11-15)
 
-**What was run:** a reviewer agent briefed as a room-acoustics measurement expert (ISO 3382-2, IEC 61260-1, Lundeby 1995, JCGM 106) attacked `engine/echo-engine.js` with 380+ adversarial synthetic takes (two-slope and flutter decays, double claps, DC, hum, rumble, near-clipping, 44.1 kHz, late peaks, short rooms). Full report: Partner's `private/audit/ENGINE_REVIEW.md`.
+**What was run:** a reviewer agent briefed as a room-acoustics measurement expert (ISO 3382-2, IEC 61260-1, Lundeby 1995, JCGM 106) attacked `engine/echo-engine.js` with 380+ adversarial synthetic takes (two-slope and flutter decays, double claps, DC, hum, rumble, near-clipping, 44.1 kHz, late peaks, short rooms). Full report: kept in the team's private audit notes (not published).
 
 **Found and fixed (commit after `c0ad6cd`; 5 new tests fail on the old engine and pass on the new one; 27 of 27 pass):**
 
