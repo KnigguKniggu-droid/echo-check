@@ -1,5 +1,5 @@
 // Echo Check+ app: room size -> set up -> 45 s recording (or upload / sample) -> result.
-import { analyse, assess, readWav, limitFor, decide, BANDS, FT3_PER_M3 } from '../engine/echo-engine.js';
+import { analyse, assess, readWav, limitFor, decide, BANDS, FT3_PER_M3, DEFAULTS } from '../engine/echo-engine.js';
 import { synthRecording } from '../engine/synth.js';
 
 const $ = (id) => document.getElementById(id);
@@ -189,6 +189,10 @@ const SAMPLES = {
   echoey: { T60: 1.1, seed: 103, label: 'Simulated echoey room (true echo time 1.1 s)' },
   filtered: { T60: 0.6, seed: 105, reported: { echoCancellation: true, noiseSuppression: true, autoGainControl: true, voiceIsolation: false }, label: 'Simulated browser report: noise suppression, echo cancellation and gain control are on. In our tests, this report is how Chrome\'s real filtering was caught (14 of 14 runs); the audio alone did not show it' },
   processed: { T60: 0.6, seed: 104, gate: { from: 0.8, to: 2.0, gain: 0.25 }, label: 'Simulated processed microphone (the background drops after each clap)' },
+  // Safety-rule demos: equally quiet claps (loud background) in an echoey and a treated room, and an uneven room.
+  quietEchoey: { T60: 1.1, seed: 105, noiseDb: -36, speechDb: -20, label: 'Simulated quiet claps in an echoey room (true echo time 1.1 s; loud background)' },
+  quietTreated: { T60: 0.45, seed: 106, noiseDb: -36, speechDb: -20, label: 'Simulated quiet claps in a treated room (true echo time 0.45 s; same clap and background levels as the echoey demo)' },
+  uneven: { T60: { 500: 0.66, 1000: 0.30, 2000: 0.25 }, seed: 107, label: 'Simulated uneven room: long echo at 500 Hz, shorter at 1000 and 2000 Hz' },
 };
 for (const b of document.querySelectorAll('[data-sample]')) {
   b.addEventListener('click', () => {
@@ -197,7 +201,7 @@ for (const b of document.querySelectorAll('[data-sample]')) {
     const label = b.textContent;
     b.disabled = true; b.textContent = 'Working…';
     setTimeout(() => {
-      const { fs, x } = synthRecording({ dur: 45, T60: s.T60, seed: s.seed, gate: s.gate || null, speech: { from: 30.5, to: 40.5, levelDb: -38 } });
+      const { fs, x } = synthRecording({ dur: 45, T60: s.T60, seed: s.seed, gate: s.gate || null, noiseDb: s.noiseDb ?? -70, speech: { from: 30.5, to: 40.5, levelDb: s.speechDb ?? -38 } });
       b.disabled = false; b.textContent = label;
       runAnalysis(x, fs, { reported: s.reported || OFF, source: 'simulated', label: s.label });
     }, 30);
@@ -271,7 +275,7 @@ function reportSentence(a, meta, v) {
   const head = (meta.source === 'simulated' ? 'SAMPLE RECORDING, NOT A REAL ROOM. ' : '')
     + `Room echo check (Echo Check+, ${when}), from hand claps recorded at one seat: `;
   const lims = `the ANSI/ASA S12.60-2010 Part 1 recommended maximum of ${lim} s for an unoccupied, furnished classroom of ${size}`;
-  const tail = (a.badge === 'amber' ? ' Microphone check: amber (see the full result).' : '')
+  const tail = (a.badge === 'amber' ? ' The microphone check gave warnings, so this estimate is less certain.' : '')
     + ' Background noise was not assessed. This is an estimate from a quick room check, not a compliance measurement.';
   if (a.verdict === 'Likely over the limit' && a.basis === 'EDT')
     return head + `the early decay time (EDT, average of 500, 1000 and 2000 Hz) was ${fmt(a.avgEDT)} s, so the reverberation time is likely above ${lims} (lower confidence). A professional measurement is recommended.` + tail;
@@ -321,10 +325,25 @@ function renderResult(res, meta) {
   $('copy-report').classList.toggle('hidden', !sentence);
   $('copy-status').textContent = '';
 
+  // Print-only header: a dated room record when the page is printed or saved as PDF.
+  const units = document.querySelector('input[name=units]:checked').value;
+  const dims = ['len', 'wid', 'hei'].map((id) => $(id).value).filter(Boolean);
+  const hv = $('hvac') ? $('hvac').options[$('hvac').selectedIndex].text : '';
+  $('print-head').textContent = `Echo Check+ room echo check · ${new Date(meta.startedAt || Date.now()).toLocaleString('en-US')}`
+    + ` · Room: ${dims.length === 3 ? dims.join(' × ') + ' ' + units : 'size not entered'}${v ? ` (about ${Math.round(v).toLocaleString('en-US')} cubic feet${a.limitS ? `; limit ${a.limitS} s` : ''})` : ''}`
+    + (hv ? ` · Ventilation during the check: ${hv}` : '')
+    + ` · Source: ${meta.source === 'simulated' ? 'simulated sample, not a real room' : meta.source === 'upload' ? 'uploaded file ' + (meta.file || '') : 'microphone' + (meta.microphone ? ' (' + meta.microphone + ')' : '')}`
+    + ` · Microphone check: ${a.badge}`;
+
   // Echo time
   const lim = a.limitS;
   const maxT = Math.max(1.2, (a.avgT20 || 0) * 1.2, lim || 0);
-  const bar = a.avgT20 ? `<div class="bar" aria-hidden="true"><div class="fill" style="width:${Math.min(100, a.avgT20 / maxT * 100)}%"></div>${lim ? `<div class="limit" style="left:${lim / maxT * 100}%"></div>` : ''}</div><p class="small">Bar: 3-band average. Black line: the limit.</p>` : '';
+  const frac = DEFAULTS.tooCloseFraction; // the engine's own ±15 % zone
+  const zone = lim ? `<div class="zone" style="left:${lim * (1 - frac) / maxT * 100}%;width:${lim * 2 * frac / maxT * 100}%"></div>` : '';
+  const caption = lim
+    ? `Bar: 3-band average. Black line: the limit (${lim} s). Striped zone: too close to call (${fmt(lim * (1 - frac))}–${fmt(lim * (1 + frac))} s). The check says "Under" only left of the stripes, and only if no single band is over the limit.`
+    : 'Bar: 3-band average.';
+  const bar = a.avgT20 ? `<div class="bar" aria-hidden="true"><div class="fill" style="width:${Math.min(100, a.avgT20 / maxT * 100)}%"></div>${zone}${lim ? `<div class="limit" style="left:${lim / maxT * 100}%"></div>` : ''}</div><p class="small">${caption}</p>` : '';
   const rows = BANDS.map((fc) => {
     const clean = res.claps.slice(0, 4).map((c) => c.bands[fc].cleanDecayDb).filter((d) => d !== null);
     return `<tr><td>${fc} Hz</td><td class="num">${fmt(a.bandT20[fc])} s</td><td class="num">${a.bandClaps[fc]} of ${Math.min(4, res.claps.length)}</td><td class="num">${clean.length ? Math.round(Math.min(...clean)) + ' dB' : '—'}</td></tr>`;

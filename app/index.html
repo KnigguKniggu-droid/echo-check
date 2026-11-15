@@ -48,10 +48,14 @@ th{font-weight:600}
 .bar{position:relative;height:22px;background:var(--line);border-radius:6px;margin:8px 0 2px}
 .bar>.fill{position:absolute;left:0;top:0;bottom:0;border-radius:6px;background:var(--accent)}
 .bar>.limit{position:absolute;top:-4px;bottom:-4px;width:3px;background:var(--fg)}
+.bar>.zone{position:absolute;top:0;bottom:0;background:repeating-linear-gradient(135deg,transparent 0 5px,var(--warn) 5px 8px);opacity:.75}
+.rules{border-left:4px solid var(--accent);padding:4px 0 4px 12px;margin:12px 0}
+.rules h3{margin:0 0 4px;font-size:1rem}
+.printonly{display:none}
 .hidden{display:none !important}
 details summary{cursor:pointer;font-weight:600;min-height:32px}
 footer{color:var(--muted);font-size:.85rem;margin:24px 0}
-@media print{button,.btn,#start,#setup,#measure,#samples,.noprint{display:none !important}body{background:#fff;color:#000}.card,.verdict{break-inside:avoid}}
+@media print{.printonly{display:block}button,.btn,#start,#setup,#measure,#samples,.noprint{display:none !important}body{background:#fff;color:#000}.card,.verdict{break-inside:avoid}}
 </style>
 </head>
 <body>
@@ -68,7 +72,15 @@ footer{color:var(--muted);font-size:.85rem;margin:24px 0}
       <button id="upload-btn" class="secondary">Upload a recording (WAV)</button>
       <input id="upload" type="file" accept=".wav,audio/wav,audio/x-wav" class="hidden">
     </div>
-    <p class="small">This is a room echo check, not a hearing test and not a compliance measurement.</p>
+    <div class="rules" id="rules">
+      <h3>Built to avoid a false pass</h3>
+      <ul class="list">
+        <li><strong>Blocked</strong> if the browser reports microphone processing on, or the audio shows clipping or a noise gate.</li>
+        <li><strong>Incomplete</strong> if the claps are not clean enough. It names the band and says what to change.</li>
+        <li><strong>"Under the limit"</strong> only with a margin: the 3-band average more than 15 % below the limit, and no band over it. Quiet claps can still say "Likely over", never "Under".</li>
+      </ul>
+    </div>
+    <p class="small">This is a room echo check, not a hearing test and not acompliance measurement.</p>
   </section>
 
   <section id="room" class="card" aria-labelledby="room-h">
@@ -120,6 +132,13 @@ footer{color:var(--muted);font-size:.85rem;margin:24px 0}
       <button class="secondary" data-sample="filtered">Browser filtering on</button>
       <button class="secondary" data-sample="processed">Noise gate in the audio</button>
     </div>
+    <h3>Safety-rule demos (simulated)</h3>
+    <p class="small">Equally quiet claps in two rooms: the echoey room can still read "Likely over" from the early echo; the treated room gets "Incomplete", never "Under". The uneven room shows the per-band guard.</p>
+    <div class="row">
+      <button class="secondary" data-sample="quietEchoey">Quiet claps: echoey room</button>
+      <button class="secondary" data-sample="quietTreated">Quiet claps: treated room</button>
+      <button class="secondary" data-sample="uneven">Uneven room: one band over</button>
+    </div>
     <h3>Real rooms, published data</h3>
     <p class="small">Measured by researchers with professional equipment (ACE corpus: Eaton, Gaubitch, Moore and Naylor, IEEE/ACM TASLP 24(10), 2016, doi:10.1109/TASLP.2016.2577502; data doi:10.5281/zenodo.6257551). Values are the mean of the 500, 1000 and 2000 Hz 1/3-octave T20, two microphone positions. University rooms, not K-12 classrooms.</p>
     <div id="ace"></div>
@@ -128,6 +147,7 @@ footer{color:var(--muted);font-size:.85rem;margin:24px 0}
 
   <section id="result" class="hidden" aria-labelledby="result-h">
     <h2 id="result-h" class="hidden">Result</h2>
+    <p id="print-head" class="printonly small"></p>
     <div id="verdict" class="verdict" role="status"></div>
     <div class="card" id="report-card">
       <h2>Sentence for a report</h2>
