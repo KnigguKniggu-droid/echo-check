@@ -162,6 +162,7 @@ $('rec-start').addEventListener('click', startRecording);
 $('rec-cancel').addEventListener('click', () => { const r = rec; rec = null; cleanup(r); $('rec-start').disabled = false; show('room', 'setup'); });
 
 // ---------- upload ----------
+$('upload-btn').addEventListener('click', () => $('upload').click());
 $('upload').addEventListener('change', async (e) => {
   const f = e.target.files && e.target.files[0];
   e.target.value = '';
@@ -186,6 +187,7 @@ const SAMPLES = {
   treated: { T60: 0.45, seed: 101, label: 'Simulated treated room (true echo time 0.45 s)' },
   border: { T60: 0.62, seed: 102, label: 'Simulated borderline room (true echo time 0.62 s)' },
   echoey: { T60: 1.1, seed: 103, label: 'Simulated echoey room (true echo time 1.1 s)' },
+  filtered: { T60: 0.6, seed: 105, reported: { echoCancellation: true, noiseSuppression: true, autoGainControl: true, voiceIsolation: false }, label: 'Simulated browser report: noise suppression, echo cancellation and gain control are on. In our tests, this report is how Chrome\'s real filtering was caught (14 of 14 runs); the audio alone did not show it' },
   processed: { T60: 0.6, seed: 104, gate: { from: 0.8, to: 2.0, gain: 0.25 }, label: 'Simulated processed microphone (the background drops after each clap)' },
 };
 for (const b of document.querySelectorAll('[data-sample]')) {
@@ -197,7 +199,7 @@ for (const b of document.querySelectorAll('[data-sample]')) {
     setTimeout(() => {
       const { fs, x } = synthRecording({ dur: 45, T60: s.T60, seed: s.seed, gate: s.gate || null, speech: { from: 30.5, to: 40.5, levelDb: -38 } });
       b.disabled = false; b.textContent = label;
-      runAnalysis(x, fs, { reported: OFF, source: 'simulated', label: s.label });
+      runAnalysis(x, fs, { reported: s.reported || OFF, source: 'simulated', label: s.label });
     }, 30);
   });
 }
@@ -257,6 +259,26 @@ function platformAmber() {
   return [];
 }
 
+// One sentence for an assistive-technology evaluation report. An audiology department chair told us such a report
+// "would just include a simple sentence stating whether or not the classroom met recommended levels". A consultant
+// warned that compliance needs a proper measurement, so the sentence says "estimate": never "complies" or "meets".
+function reportSentence(a, meta, v) {
+  const lim = a.limitS;
+  if (!lim || !['Likely over the limit', 'Too close to call', 'Under the limit (weak evidence)'].includes(a.verdict)) return null;
+  const when = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+  const size = v ? `about ${Math.round(v).toLocaleString('en-US')} cubic feet` : 'this size';
+  const head = (meta.source === 'simulated' ? 'SAMPLE RECORDING, NOT A REAL ROOM. ' : '')
+    + `Room echo check (Echo Check+, ${when}), from hand claps recorded at one seat: `;
+  const lims = `the ANSI/ASA S12.60 recommended limit of ${lim} s for a classroom of ${size}`;
+  const tail = ' Background noise was not assessed. This is an estimate from a quick room check, not a compliance measurement.';
+  if (a.verdict === 'Likely over the limit' && a.basis === 'EDT')
+    return head + `the early decay time (EDT, average of 500, 1000 and 2000 Hz) was ${fmt(a.avgEDT)} s, so the reverberation time is likely above ${lims} (lower confidence). A professional measurement is recommended.` + tail;
+  const t = `the estimated reverberation time (T20, average of 500, 1000 and 2000 Hz) was ${fmt(a.avgT20)} s`;
+  if (a.verdict === 'Likely over the limit') return head + `${t}, likely above ${lims}. A professional measurement is recommended.` + tail;
+  if (a.verdict === 'Too close to call') return head + `${t}, within 15 % of ${lims}; the check cannot tell which side of the limit the room is on. A professional measurement is recommended.` + tail;
+  return head + `${t}, below ${lims}. This is weak evidence: it must not be used to deny accommodations.` + tail;
+}
+
 function renderResult(res, meta) {
   const v = volumeFt3();
   const a = assess(res, { volumeFt3: v ?? undefined, reported: meta.reported, extraAmber: meta.source === 'microphone' ? platformAmber() : [] });
@@ -278,6 +300,13 @@ function renderResult(res, meta) {
   $('verdict').innerHTML = `<h2>${esc(a.verdict)}</h2>${src}<p>${esc(line)}</p>`
     + (a.reasons.length ? `<p>${a.reasons.map(esc).join(' ')}</p>` : '')
     + `<p><strong>${esc(next)}</strong></p>`;
+
+  // Sentence for a report
+  const sentence = reportSentence(a, meta, v);
+  lastResult.reportSentence = sentence;
+  $('report-text').textContent = sentence || 'No sentence: this check gave no verdict, so there is nothing to report yet.';
+  $('copy-report').classList.toggle('hidden', !sentence);
+  $('copy-status').textContent = '';
 
   // Echo time
   const lim = a.limitS;
@@ -317,8 +346,22 @@ function renderResult(res, meta) {
         + (status === 'flagged' ? '<p class="msg"><strong>May read too high:</strong> the trust check has warnings (see above). Treat this number with caution.</p>' : '')
         + why;
   // Autotest: confirm that the whole result page rendered (an error above would stop this line).
-  if (window.__autotest && meta.source === 'microphone') console.log('ECHOCHECK_RENDERED ' + JSON.stringify({ verdict: a.verdict, basis: a.basis, avgEDT: a.avgEDT, echoChars: $('echo').textContent.length }));
+  if (window.__autotest && meta.source === 'microphone') console.log('ECHOCHECK_RENDERED ' + JSON.stringify({ verdict: a.verdict, basis: a.basis, avgEDT: a.avgEDT, echoChars: $('echo').textContent.length, report: sentence }));
 }
+
+$('copy-report').addEventListener('click', async () => {
+  const s = lastResult && lastResult.reportSentence;
+  if (!s) return;
+  try {
+    await navigator.clipboard.writeText(s);
+    $('copy-status').textContent = 'Copied.';
+  } catch (e) {
+    const r = document.createRange();
+    r.selectNodeContents($('report-text'));
+    const sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(r);
+    $('copy-status').textContent = 'Selected. Press Ctrl+C (or ⌘+C) to copy.';
+  }
+});
 
 function saveBlob(blob, name) {
   const url = URL.createObjectURL(blob);
@@ -336,7 +379,7 @@ $('dl-json').addEventListener('click', () => {
     room: { units, length: parseFloat($('len').value) || null, width: parseFloat($('wid').value) || null, height: parseFloat($('hei').value) || null, volumeFt3: volumeFt3() },
     microphone: ctx.microphone || null, captureMethod: ctx.captureMethod || null, sampleRate: ctx.audio ? ctx.audio.fs : null, userAgent: navigator.userAgent,
     ventilation: $('hvac') ? $('hvac').value : null,
-    reported: ctx.reported || null, tabHidden: !!ctx.tabHidden, assessment, clapTimesS: res.clapTimesS, claps: res.claps, speechMarginDb: res.speechMarginDb };
+    reported: ctx.reported || null, tabHidden: !!ctx.tabHidden, assessment, reportSentence: lastResult.reportSentence || null, clapTimesS: res.clapTimesS, claps: res.claps, speechMarginDb: res.speechMarginDb };
   saveBlob(new Blob([JSON.stringify(out, null, 1)], { type: 'application/json' }), `echo-check_${stamp()}.json`);
 });
 

@@ -4,7 +4,7 @@ Written by the Partner session, Friday 2026-11-13, about 21:10 CST. README Phase
 
 ## 1. Engine against synthetic decays (CI test)
 
-`node --test engine/test/engine.test.js`: **16 of 16 pass.** Pass rule: every band T20 within 0.05 s or 5 % of the true T60, whichever is larger.
+`node --test engine/test/engine.test.js`: **22 of 22 pass** (re-run Sun 2026-11-15 07:05 CST; 16 on Friday, 22 after the Saturday additions). Pass rule: every band T20 within 0.05 s or 5 % of the true T60, whichever is larger.
 
 | What is tested | Result |
 |---|---|
