@@ -28,7 +28,7 @@ Echo (reverberation) makes speech harder to follow in a classroom.
 - **A full measurement needs an acoustical consultant.** Erin C. Schafer, an audiology department chair, told us: *"It's very unlikely funding would even exist for this request in public schools (very tight budgets!)."*
 - **Clap apps exist, but they do not check the microphone.** Clap-based echo checks are not new. Spratford, Walker and McCreery (2019) measured 164 classrooms with a hand clap and an app. In a search on 13 and 15 November 2026 we found free clap apps for phones (Akustikkollen, ClapIR, ClapReverb) and a browser tool that checks uploaded impulse responses against S12.60 (AcoustiVision Pro). We found no free web page that records claps live, compares the result with S12.60 and blocks the verdict when the browser reports microphone processing. This is what we found, not proof that none exists.
 - **Free noise apps do not measure echo.** The NIOSH sound level meter app measures noise only (team research notes).
-- **A laptop microphone can hide the echo.** Browsers can apply noise suppression, echo cancellation and gain control. Microsoft says Windows Voice Clarity is "enabled by default" and "minimizes reverberation" (Microsoft Support, "Inside this update"). In our browser test, Chrome's processing moved the echo time by up to −17.8 %, and the audio alone did not reveal it.
+- **A laptop microphone can hide the echo.** Browsers can apply noise suppression, echo cancellation and gain control. Microsoft says Windows Voice Clarity is "enabled by default" and "minimizes reverberation" (Microsoft Support, "Inside this update"). In our browser test (Chrome's real processing applied to recorded test takes through a fake microphone), the processing moved the echo time by up to −17.8 %, and the audio alone did not reveal it.
 
 ## 2. How to use it
 
@@ -51,7 +51,7 @@ An acoustics consultant named the one harm for a tool like this: a false pass. A
 
 **A sentence for a report.** For an AT evaluation, the result page writes one sentence to copy. It says "an estimate", never "complies". It gives the date, the room size, the per-band values and the limit. For an "Under" result in a room up to 10,000 ft³, it adds that S12.60 also asks that such rooms be adaptable to 0.3 s for students with hearing loss. Incomplete and Blocked results get no sentence.
 
-The result page also shows the speech margin at the seat (empty room, best case) and a limitations box. Without a microphone, a user can run simulated sample rooms, three safety-rule demos, published data from university rooms, or a WAV upload.
+The result page also shows the speech margin at the seat (empty room, best case) and a limitations box. Without a microphone, a user can run simulated sample rooms, four demo buttons for the safety rules (three "safety-rule demos" plus "Browser filtering on"), published data from university rooms, or a WAV upload.
 
 ## 4. How it works
 
