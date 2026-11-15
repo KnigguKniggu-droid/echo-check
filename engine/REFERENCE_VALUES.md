@@ -286,3 +286,14 @@ Written by the Partner session, Friday 2026-11-13, about 21:10 CST. README Phase
 - **When a verdict is given, the median error is about 1 %** against pyrato on the same responses (90th percentile 2–7 %).
 - **HOMULA is harsher than a real clap:** its loudspeakers are directional, so the direct sound is stronger relative to the echo.
 - **Reading:** with a loud cupped clap and the ventilation paused, a verdict is likely from most seats. With the ventilation running (about 44 dBA in US rooms, `research/CLASSROOM_FIELD_DATA.md`), seats about 3–5 m from the clapper work best. **The clap level is still literature-based, not measured by us;** a real classroom take is the remaining check.
+
+## 11. Median or mean over claps? (reviewer question, Sun 2026-11-15)
+
+An architectural-acoustics graduate student asked how much our median over claps differs from the arithmetic mean that ISO 3382-2 uses for repeated measurements. Same usable claps (first 4 detected, at least 30 dB of clean decay), both rules, nothing else changed. Scripts: `median_vs_mean.mjs` and `mm_home.mjs` (Partner scratchpad; logic described here).
+
+| Data | Takes with a T20 verdict | Mean vs median, 3-band average | Error against the pyrato reference (median rule / mean rule) | Verdict-zone changes |
+|---|---|---|---|---|
+| Simulated claps in 3 measured rooms (HOMULA-RIR, PAN-AR; every 3rd take of §10) | 149 | median 0.09 %, 90th percentile 0.35 %, max 1.38 % | median 0.88 % / 0.89 %; 90th percentile 2.81 % / 2.93 % | 0 |
+| Our real home take, processing off (Friday) | 1 | −1.0 % (0.412 → 0.408 s). At 500 Hz one clap read 0.32 s against 0.38–0.39 s for the others, so the mean is 2.7 % lower there | — | 0 |
+
+**Reading:** with simulated claps the two rules agree within about 1 %. With real claps, one odd clap moves the mean more than the median, which is why the engine keeps the median. The difference is far inside the ±15 % "Too close to call" zone. Not tested: many real takes.
