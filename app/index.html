@@ -5,130 +5,395 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Echo Check+</title>
 <meta name="description" content="Free room echo check for classrooms. Clap four times, get the echo time in three bands against the ANSI/ASA S12.60 limit. Audio stays on this device.">
+<meta name="theme-color" content="#f5f3ee" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#111922" media="(prefers-color-scheme: dark)">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 28 28'%3E%3Crect width='28' height='28' rx='6' fill='%231e2f42'/%3E%3Cg transform='translate(2.6 2.5) scale(.82)' fill='none' stroke='%23f2b632' stroke-width='2.8' stroke-linecap='round'%3E%3Ccircle cx='9' cy='14' r='2.6' fill='%23f2b632' stroke='none'/%3E%3Cpath d='M14 9a7 7 0 0 1 0 10M19 5a13 13 0 0 1 0 18'/%3E%3C/g%3E%3C/svg%3E">
+<link rel="preload" href="fonts/Archivo-100_900.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="tokens.css">
 <style>
-:root{--bg:#ffffff;--fg:#1a1a1a;--muted:#5b5b5b;--line:#d9d9d9;--accent:#0b57d0;--on-accent:#ffffff;--ok:#137333;--ok-bg:#e6f4ea;--warn:#8a4b00;--warn-bg:#fef7e0;--bad:#b3261e;--bad-bg:#fce8e6;--card:#f6f7f9}
-@media (prefers-color-scheme:dark){:root{--bg:#121212;--fg:#ececec;--muted:#a8a8a8;--line:#3a3a3a;--accent:#8ab4f8;--on-accent:#0b1b33;--ok:#81c995;--ok-bg:#16301f;--warn:#fdd663;--warn-bg:#3a3012;--bad:#f28b82;--bad-bg:#3c1a18;--card:#1d1e20}}
-*{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
-main{max-width:760px;margin:0 auto;padding:16px}
-h1{font-size:1.6rem;margin:8px 0 2px}
-h2{font-size:1.2rem;margin:0 0 8px}
-p{margin:6px 0}
-.lede{color:var(--muted);margin-bottom:12px}
-.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px;margin:12px 0}
-.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
-button,.btn{font:inherit;font-weight:600;padding:12px 18px;border-radius:8px;border:1px solid var(--accent);background:var(--accent);color:var(--on-accent);cursor:pointer;min-height:44px;text-decoration:none;display:inline-block}
-button.secondary,.btn.secondary{background:transparent;color:var(--accent)}
-button:disabled{opacity:.5;cursor:default}
-button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
-label{font-weight:600}
-input[type=number],select{width:100%;padding:10px;font:inherit;border:1px solid var(--muted);border-radius:8px;background:var(--bg);color:var(--fg)}
-.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-@media (max-width:480px){.grid3{grid-template-columns:1fr}}
-.small{color:var(--muted);font-size:.9rem}
-.msg{padding:10px 12px;border-radius:8px;border:1px solid var(--line);margin:10px 0}
-.msg.err{border-color:var(--bad);color:var(--bad);background:var(--bad-bg)}
-ol.steps li,ul.list li{margin:4px 0}
-.phase{font-size:2.6rem;font-weight:800;line-height:1.15;margin:8px 0;text-align:center}
-.count{font-size:4rem;font-weight:800;text-align:center;font-variant-numeric:tabular-nums}
-.meter{height:14px;background:var(--line);border-radius:7px;overflow:hidden;margin-top:8px}
-.meter>div{height:100%;width:0;background:var(--ok)}
-.verdict{border-radius:10px;padding:16px;margin:12px 0;border:2px solid var(--line)}
-.verdict h2{font-size:1.5rem;margin:0 0 6px}
-.v-over{border-color:var(--bad);background:var(--bad-bg)}
-.v-close{border-color:var(--warn);background:var(--warn-bg)}
-.v-under{border-color:var(--ok);background:var(--ok-bg)}
-.v-none{border-color:var(--line);background:var(--card)}
-.badge{display:inline-block;font-weight:700;padding:2px 10px;border-radius:999px;border:2px solid currentColor}
-.b-green{color:var(--ok)}.b-amber{color:var(--warn)}.b-red{color:var(--bad)}
-table{width:100%;border-collapse:collapse;font-size:.95rem}
-td,th{border-bottom:1px solid var(--line);padding:6px 4px;text-align:left;vertical-align:top}
-th{font-weight:600}
-.num{text-align:right;font-variant-numeric:tabular-nums}
-.bar{position:relative;height:22px;background:var(--line);border-radius:6px;margin:8px 0 2px}
-.bar>.fill{position:absolute;left:0;top:0;bottom:0;border-radius:6px;background:var(--accent)}
-.bar>.limit{position:absolute;top:-4px;bottom:-4px;width:3px;background:var(--fg)}
-.bar>.zone{position:absolute;top:0;bottom:0;background:repeating-linear-gradient(135deg,transparent 0 5px,var(--warn) 5px 8px);opacity:.75}
-.rules{border-left:4px solid var(--accent);padding:4px 0 4px 12px;margin:12px 0}
-.rules h3{margin:0 0 4px;font-size:1rem}
-.printonly{display:none}
-.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
-.hidden{display:none !important}
-details summary{cursor:pointer;font-weight:600;min-height:32px}
-footer{color:var(--muted);font-size:.85rem;margin:24px 0}
-/* UI polish (WILLIAM_UI_BRIEF.md tasks 1, 3, 4, 5, 6): look only, no text or logic changed */
-h1{font-size:clamp(1.7rem,5vw,2.2rem);letter-spacing:-.01em;display:flex;align-items:center;gap:10px}
+/* Echo Check+ tool styles. Colours, type and motion values come from tokens.css.
+   Look only: no text, id, role or aria attribute is set here. */
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:400 1rem/1.55 var(--font);font-kerning:normal}
+::selection{background:var(--c-accent);color:var(--c-on-accent)}
+main{max-width:1184px;margin:0 auto;padding:var(--space-m) 20px var(--space-l);font-size:var(--fs-body)}
+@media (min-width:600px){main{padding:var(--space-l) 32px var(--space-xl)}}
+
+/* ---------- type ---------- */
+h1{font-size:var(--fs-3);font-weight:700;line-height:1.2;letter-spacing:-.01em;margin:0 0 var(--space-xs);display:flex;align-items:center;gap:10px}
 h1 svg{flex:none}
-.lede{font-size:1.05rem;max-width:62ch}
-.card{padding:20px;margin:16px 0;box-shadow:0 1px 2px rgba(0,0,0,.05)}
-.row{gap:12px}
-table{font-size:1rem}
-button,.btn{transition:filter .15s}
-button:hover:not(:disabled){filter:brightness(1.08)}
-.phase{min-height:2.4em}
-.count{font-size:min(22vw,6rem)}
-.verdict{padding:20px;border-width:3px;box-shadow:0 2px 0 rgba(0,0,0,.06)}
-.verdict h2{font-size:clamp(1.7rem,6vw,2.3rem);line-height:1.15;margin-bottom:8px}
-.verdict p{max-width:60ch}
-.verdict h2::before{content:"";display:inline-block;width:1.1em;height:1.1em;margin-right:.4em;vertical-align:-.16em;background:currentColor;-webkit-mask:var(--ico) center/contain no-repeat;mask:var(--ico) center/contain no-repeat}
+h2{font-size:var(--fs-3);font-weight:700;line-height:1.2;letter-spacing:-.012em;margin:0 0 12px;text-wrap:balance}
+h3{font-size:var(--fs-2);font-weight:700;line-height:1.25;margin:var(--space-l) 0 var(--space-xs)}
+p{margin:0 0 12px;max-width:68ch;text-wrap:pretty}
+strong{font-weight:700}
+.lede{color:var(--muted);font-size:var(--fs-2);line-height:1.45;max-width:58ch;margin:0}
+.lede strong{color:var(--fg);font-weight:600}
+.small{color:var(--muted);font-size:var(--fs-small);line-height:1.5}
+.n{color:var(--muted);font-variant-numeric:tabular-nums;font-weight:600;margin-right:.1em}
+
+/* ---------- sections: grouped by space and one hairline, not by boxes ---------- */
+.card{margin:0;padding:var(--space-l) 0}
+.card>:last-child{margin-bottom:0}
+main>.card:not(.hidden)~.card:not(.hidden),#result>.card,#result>.row,footer{border-top:1px solid var(--line)}
+.row{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+.card>.row{margin-top:var(--space-m)}
+@media (max-width:480px){.row>button{flex:1 1 auto}}
+footer{color:var(--muted);font-size:var(--fs-small);line-height:1.5;margin:0;padding:var(--space-m) 0 0;max-width:none}
+
+/* ---------- buttons: one filled, the rest outlined; hover and keyboard focus look the same ---------- */
+button,.btn{font:inherit;font-weight:600;line-height:1.25;padding:12px 20px;min-height:48px;border-radius:var(--radius);border:1px solid var(--accent);background:var(--accent);color:var(--on-accent);cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:8px;touch-action:manipulation;-webkit-tap-highlight-color:transparent;transition:background-color var(--dur-ui) var(--ease-out),border-color var(--dur-ui) var(--ease-out),color var(--dur-ui) var(--ease-out)}
+button.secondary,.btn.secondary{background:transparent;color:var(--fg);border-color:var(--line-strong)}
+button:focus-visible,.btn:focus-visible{background:var(--accent-hover);border-color:var(--accent-hover)}
+button.secondary:focus-visible,.btn.secondary:focus-visible{background:rgba(127,127,127,.14);background:color-mix(in srgb,var(--fg) 8%,transparent);border-color:var(--fg)}
+@media (hover:hover){
+  button:hover:not(:disabled),.btn:hover{background:var(--accent-hover);border-color:var(--accent-hover)}
+  button.secondary:hover:not(:disabled),.btn.secondary:hover{background:rgba(127,127,127,.14);background:color-mix(in srgb,var(--fg) 8%,transparent);border-color:var(--fg)}
+}
+button:active:not(:disabled),.btn:active{background:var(--accent-press);border-color:var(--accent-press)}
+button.secondary:active:not(:disabled),.btn.secondary:active{background:rgba(127,127,127,.24);background:color-mix(in srgb,var(--fg) 15%,transparent);border-color:var(--fg)}
+button:disabled{opacity:.5;cursor:default}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible,[tabindex]:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+
+/* ---------- fields ---------- */
+label{font-weight:600}
+label[for]{display:block;margin-bottom:6px}
+input[type=number],select{width:100%;min-height:48px;padding:10px 12px;font:inherit;font-variant-numeric:tabular-nums;border:1px solid var(--line-strong);border-radius:var(--radius);background:var(--card);color:var(--fg);transition:border-color var(--dur-ui) var(--ease-out)}
+input[type=number]:hover,select:hover{border-color:var(--fg)}
+input::placeholder{color:var(--muted);opacity:1}
+select{-webkit-appearance:none;appearance:none;padding-right:40px;background-image:var(--chev);background-repeat:no-repeat;background-position:right 12px center;background-size:16px;max-width:22rem}
+:root{--chev:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%2316212d' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m3.5 6 4.5 4.5L12.5 6'/%3E%3C/svg%3E");--arrow:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 10h12M11 5l5 5-5 5'/%3E%3C/svg%3E")}
+@media screen and (prefers-color-scheme:dark){:root{--chev:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23eef0ee' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m3.5 6 4.5 4.5L12.5 6'/%3E%3C/svg%3E")}}
+[role=radiogroup]{gap:4px 20px;margin:var(--space-s) 0 var(--space-xs)}
+.card>[role=radiogroup]{margin-top:var(--space-s)}
+[role=radiogroup] label{display:inline-flex;align-items:center;gap:8px;min-height:44px;font-weight:500;cursor:pointer}
+input[type=radio]{accent-color:var(--accent);width:20px;height:20px;margin:0;flex:none}
+.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--space-s);margin:0 0 var(--space-s)}
+@media (max-width:340px){.grid3{grid-template-columns:1fr}}
+.msg{padding:12px 14px;border-radius:var(--radius);border:1px solid var(--line);background:var(--card);margin:var(--space-s) 0;max-width:68ch}
+.msg.err{border-color:var(--bad);color:var(--bad);background:var(--bad-bg)}
+
+/* ---------- lists and steps ---------- */
+ul.list{margin:var(--space-xs) 0 12px;padding-left:1.25em}
+ul.list li{margin:var(--space-xs) 0;padding-left:2px;max-width:68ch}
+ul.list li::marker{color:var(--muted)}
+ol.steps{margin:var(--space-s) 0 var(--space-m);padding-left:1.7em}
+ol.steps li{margin:0 0 var(--space-s);padding-left:8px;max-width:66ch}
+ol.steps li::marker{font-weight:700;font-variant-numeric:tabular-nums;color:var(--muted)}
+.rules{margin:var(--space-l) 0 var(--space-m);padding:0}
+.rules h3{margin:0 0 var(--space-xs)}
+#setup>p{margin-bottom:var(--space-s)}
+
+/* ---------- recording: a slate board, read from across the room ---------- */
+main:has(>#measure:not(.hidden)){max-width:1120px}
+#measure{background:var(--c-base);color:var(--c-on-base);border-radius:var(--radius);padding:var(--space-m) 16px;margin:var(--space-s) 0;min-height:min(80vh,760px);min-height:min(80svh,760px);display:flex;flex-direction:column;align-items:center;text-align:center}
+#measure h2{font-size:var(--fs-2);font-weight:600;letter-spacing:0;margin:0}
+#measure .n,#measure .small{color:var(--c-board-muted)}
+.phase{font-size:clamp(2.5rem,8.5vw,6.5rem);font-weight:700;line-height:1.05;letter-spacing:-.02em;min-height:2.1em;margin:var(--space-m) 0 var(--space-xs);flex:1 0 auto;display:flex;align-items:center;justify-content:center;text-wrap:balance;max-width:16ch}
+.count{font-size:clamp(7rem,30vw,15rem);font-weight:700;line-height:.86;letter-spacing:-.03em;font-variant-numeric:tabular-nums;text-align:center}
+.meter{height:10px;width:min(100%,560px);background:rgba(245,243,238,.2);border-radius:5px;overflow:hidden;margin:var(--space-l) 0 var(--space-s)}
+.meter>div{height:100%;width:0;background:var(--c-accent);border-radius:5px}
+#measure .small{margin:0;min-height:1.5em}
+#measure>.row{justify-content:center;margin-top:var(--space-m)}
+#measure button.secondary{color:var(--c-on-base);border-color:var(--c-board-muted)}
+#measure button.secondary:focus-visible{background:rgba(245,243,238,.14);border-color:var(--c-on-base)}
+@media (hover:hover){#measure button.secondary:hover{background:rgba(245,243,238,.14);border-color:var(--c-on-base)}}
+#measure button.secondary:active{background:rgba(245,243,238,.24)}
+#measure :focus-visible{outline-color:var(--c-accent)}
+@media (min-width:600px){#measure{padding:var(--space-l) var(--space-l)}}
+
+/* ---------- sample rooms: a list of rows ---------- */
+#samples .row:has([data-sample]){gap:0;margin-top:var(--space-s);border-top:1px solid var(--line)}
+#samples button[data-sample]{flex:1 1 100%;justify-content:space-between;text-align:left;min-height:56px;padding:14px 8px;border:0;border-bottom:1px solid var(--line);border-radius:0;background:transparent;color:var(--fg)}
+#samples button[data-sample]::after{content:"";flex:none;width:20px;height:20px;background:currentColor;opacity:.55;-webkit-mask:var(--arrow) center/contain no-repeat;mask:var(--arrow) center/contain no-repeat;transition:transform var(--dur-ui) var(--ease-out),opacity var(--dur-ui) var(--ease-out)}
+#samples button[data-sample]:focus-visible{background:rgba(127,127,127,.14);background:color-mix(in srgb,var(--fg) 8%,transparent);outline-offset:-3px}
+#samples button[data-sample]:focus-visible::after{transform:translateX(4px);opacity:1}
+@media (hover:hover){
+  #samples button[data-sample]:hover:not(:disabled){background:rgba(127,127,127,.14);background:color-mix(in srgb,var(--fg) 8%,transparent)}
+  #samples button[data-sample]:hover:not(:disabled)::after{transform:translateX(4px);opacity:1}
+}
+#samples button[data-sample]:active:not(:disabled){background:rgba(127,127,127,.24);background:color-mix(in srgb,var(--fg) 15%,transparent)}
+#ace{overflow-x:auto}
+
+/* ---------- result: verdict first and largest ---------- */
+#result{padding-top:var(--space-l)}
+.verdict{--v:var(--fg);--v-bg:var(--card);--v-line:var(--line);background:var(--v-bg);border:1px solid var(--v-line);border-radius:var(--radius);padding:var(--space-m) 20px;margin:0}
+.v-over{--v:var(--bad);--v-bg:var(--bad-bg);--v-line:var(--bad)}
+.v-close{--v:var(--warn);--v-bg:var(--warn-bg);--v-line:var(--warn)}
+.v-under{--v:var(--ok);--v-bg:var(--ok-bg);--v-line:var(--ok)}
+.v-none{--v:var(--fg);--v-bg:var(--card);--v-line:var(--line-strong)}
+.verdict h2{font-size:var(--fs-5);line-height:1.08;letter-spacing:-.02em;color:var(--v);margin:0 0 var(--space-s);display:flex;align-items:flex-start;gap:.35em}
+.verdict h2::before{content:"";flex:none;width:1em;height:1em;margin-top:.04em;background:currentColor;-webkit-mask:var(--ico) center/contain no-repeat;mask:var(--ico) center/contain no-repeat}
 .v-over h2{--ico:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2 1 21h22z M11 9h2v6h-2z M11 17h2v2h-2z' fill-rule='evenodd'/%3E%3C/svg%3E")}
 .v-close h2{--ico:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M3 10h18v4H3z'/%3E%3C/svg%3E")}
 .v-under h2{--ico:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z'/%3E%3C/svg%3E")}
 .v-none h2{--ico:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M11 17h2v2h-2z M12 5a4 4 0 0 0-4 4h2a2 2 0 1 1 3 1.7c-1.2.8-1 1.8-1 2.3h2c0-.6.2-.8 1-1.4A4 4 0 0 0 12 5z'/%3E%3C/svg%3E")}
-#report-card{border-color:var(--accent)}
-#report-text{font-size:1.1rem;line-height:1.55}
-.bar{height:28px;border-radius:14px;margin:12px 0 4px}
-.bar>.fill{border-radius:14px 0 0 14px;min-width:6px}
-.bar>.limit{width:4px;top:-6px;bottom:-6px;border-radius:2px;box-shadow:0 0 0 2px var(--card)}
-.bar>.zone{opacity:.9}
-@media (prefers-reduced-motion:no-preference){.bar>.fill{animation:grow .6s ease-out}}
+.verdict p{max-width:62ch}
+.verdict p:not(.small){font-size:1.0625rem}
+.verdict>:last-child{margin-bottom:0}
+@media (min-width:600px){.verdict{padding:var(--space-l) var(--space-l) 36px}.verdict h2{font-size:var(--fs-6)}}
+
+#result>#report-card{border-top:0}
+#report-text{font-size:var(--fs-2);line-height:1.5;max-width:none;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:var(--space-s) 20px;margin:var(--space-s) 0 0;font-variant-numeric:tabular-nums}
+#report-card>.row{margin-top:var(--space-s);min-height:0}
+@media (max-width:480px){#report-text{font-size:var(--fs-1);line-height:1.55;padding:14px var(--space-s)}}
+#result>.row{padding:var(--space-m) 0 var(--space-l)}
+#echo>p>strong:first-child{font-size:var(--fs-2);font-variant-numeric:tabular-nums}
+
+/* The one chart: fill, striped too-close zone, limit line. Markup comes from app.js. */
+.bar{position:relative;height:28px;background:var(--line);border-radius:4px;margin:var(--space-m) 0 var(--space-s)}
+.bar>.fill{position:absolute;left:0;top:0;bottom:0;border-radius:4px 0 0 4px;background:var(--bar-fill);min-width:6px}
+.bar>.zone{position:absolute;top:0;bottom:0;background:repeating-linear-gradient(135deg,transparent 0 5px,var(--warn) 5px 8px);background:repeating-linear-gradient(135deg,transparent 0 5px,var(--warn) 5px 8px),color-mix(in srgb,var(--bg) 64%,transparent)}
+.bar>.limit{position:absolute;top:-7px;bottom:-7px;width:4px;border-radius:2px;background:var(--fg);box-shadow:0 0 0 2px var(--bg)}
+@media (prefers-reduced-motion:no-preference){.bar>.fill{animation:grow var(--dur-reveal) var(--ease-out)}}
 @keyframes grow{from{width:0}}
+
+table{width:100%;border-collapse:collapse;font-size:1rem;font-variant-numeric:tabular-nums;margin:var(--space-s) 0 12px}
+td,th{border-bottom:1px solid var(--line);padding:10px 16px 10px 0;text-align:left;vertical-align:top}
+td:last-child,th:last-child{padding-right:0}
+th{font-weight:600}
+thead th{font-size:var(--fs-small);color:var(--muted);border-bottom-color:var(--line-strong);vertical-align:bottom}
+.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+@media (max-width:480px){table{font-size:var(--fs-small)}td,th{padding-right:10px}#ace .num{white-space:normal}}
+
+.badge{display:inline-flex;align-items:center;gap:6px;vertical-align:.14em;font-size:var(--fs-small);font-weight:700;letter-spacing:0;line-height:1.3;padding:2px 10px 2px 8px;border-radius:999px;border:1.5px solid currentColor;margin-left:6px}
+.badge::before{content:"";width:8px;height:8px;border-radius:50%;background:currentColor}
+.b-green{color:var(--ok)}.b-amber{color:var(--warn)}.b-red{color:var(--bad)}
+details{margin-top:var(--space-xs)}
+details summary{cursor:pointer;font-weight:600;min-height:44px;padding:10px 0;border-radius:4px}
+details table{margin-top:0}
+
+/* ---------- editorial layout: a heading column and a content column ---------- */
+main p{max-width:var(--measure)}
+main .small{max-width:60ch}
+main>.card:not(#measure){padding:var(--space-sec) 0}
+main>#start{padding-top:var(--space-l)}
+main>.card:not(#measure)>h2{font-size:var(--fs-h2);font-weight:600;line-height:1.04;letter-spacing:-.024em;margin:0 0 var(--space-m);display:flex;align-items:baseline;gap:.26em}
+main>.card:not(#measure)>h2 .n{font-weight:300;color:var(--line-strong);letter-spacing:-.03em;margin:0}
+@media (min-width:900px){
+  main>.card:not(#measure){display:grid;grid-template-columns:minmax(0,7fr) minmax(0,17fr);column-gap:var(--space-l)}
+  main>.card:not(#measure)>*{grid-column:2;min-width:0}
+  main>.card:not(#measure)>h2{grid-column:1;grid-row:1/span 24;align-self:start;position:sticky;top:var(--space-l);display:block;margin:0}
+  main>.card:not(#measure)>h2 .n{display:block;font-size:clamp(4.5rem,8vw,7rem);font-weight:200;line-height:.82;margin:0 0 .16em -.05em}
+}
+
+/* Start: lead paragraph, one filled action and two quiet ones, the plan of the set-up */
+.start-top{display:grid;gap:var(--space-l);align-items:start}
+@media (min-width:1080px){.start-top{grid-template-columns:minmax(0,1fr) minmax(0,340px);column-gap:44px}}
+main p.lead{font-size:var(--fs-lead);line-height:1.32;letter-spacing:-.012em;max-width:34ch;margin:0}
+.actions{margin-top:var(--space-m);gap:4px 24px}
+.actions>button:not(.secondary){padding-left:28px;padding-right:28px}
+.actions button.secondary{border-color:transparent;padding-left:0;padding-right:0;text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:6px;text-decoration-color:var(--line-strong);transition:text-decoration-color var(--dur-ui) var(--ease-out),color var(--dur-ui) var(--ease-out)}
+.actions button.secondary:focus-visible{background:transparent;border-color:transparent;text-decoration-color:currentColor}
+@media (hover:hover){.actions button.secondary:hover:not(:disabled){background:transparent;border-color:transparent;text-decoration-color:currentColor}}
+.actions button.secondary:active:not(:disabled){background:transparent;border-color:transparent;color:var(--muted)}
+@media (max-width:480px){.actions>button:not(.secondary){flex:1 1 100%}.actions button.secondary{flex:0 1 auto}}
+
+.plan{display:block;width:100%;max-width:440px;height:auto;color:var(--fg);font:500 12px/1 var(--font);overflow:visible}
+.plan text{fill:currentColor;stroke:none}
+.plan .p-wall{fill:none;stroke:currentColor;stroke-width:1.5}
+.plan .p-board{fill:none;stroke:currentColor;stroke-width:4}
+.plan .p-desk{fill:none;stroke:currentColor;stroke-width:1;opacity:.42}
+.plan .p-mark{fill:var(--c-accent);stroke:currentColor;stroke-width:1.5}
+.plan .p-clap{fill:currentColor}
+.plan .p-wave{fill:none;stroke:var(--c-accent);stroke-width:2;stroke-linecap:round}
+.plan .p-dim{fill:none;stroke:currentColor;stroke-width:1}
+.plan .p-lead{fill:none;stroke:currentColor;stroke-width:1;stroke-dasharray:2 3}
+
+/* The three guards: term and mark on the left, the sentence on the right, hairlines between */
+.rules{margin:var(--space-xl) 0 var(--space-m)}
+.rules h3{font-size:var(--fs-2);font-weight:600;letter-spacing:-.01em;margin:0 0 var(--space-s)}
+ul.guard{list-style:none;margin:0;padding:0;border-bottom:1px solid var(--line)}
+ul.guard li{display:grid;gap:4px var(--space-m);align-items:start;margin:0;padding:18px 0;max-width:none;border-top:1px solid var(--line);line-height:1.5}
+ul.guard strong{display:flex;align-items:center;gap:10px;font-weight:600}
+ul.guard strong::before{content:"";flex:none;width:18px;height:18px;background:var(--g,currentColor);-webkit-mask:var(--ico) center/contain no-repeat;mask:var(--ico) center/contain no-repeat}
+ul.guard span{max-width:54ch}
+.g-block{--g:var(--bad);--ico:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill-rule='evenodd' d='M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z M6 10.5h12v3H6z'/%3E%3C/svg%3E")}
+.g-part{--g:var(--muted);--ico:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill-rule='evenodd' d='M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z M12 5a7 7 0 0 1 0 14z'/%3E%3C/svg%3E")}
+.g-under{--g:var(--ok);--ico:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z'/%3E%3C/svg%3E")}
+@media (min-width:640px){ul.guard li{grid-template-columns:minmax(0,13.5rem) minmax(0,1fr)}}
+#start>.small{margin-top:var(--space-m)}
+
+/* Room size: units as a segmented control, three fields in a row, the box beside them */
+.room-layout{display:grid;gap:var(--space-m) var(--space-xl);align-items:end;margin-top:var(--space-s)}
+@media (min-width:900px){.room-layout{grid-template-columns:minmax(0,1fr) minmax(0,300px)}}
+.room-fields{min-width:0}
+.room-fields .grid3{margin:var(--space-s) 0}
+.grid3 label[for]{font-size:var(--fs-small);font-weight:500;color:var(--muted);margin-bottom:6px}
+.grid3 input[type=number]{font-size:var(--fs-2);min-height:52px}
+#vol-out{margin:0}
+.roombox{margin:0;width:100%;max-width:300px;aspect-ratio:5/4;color:var(--fg)}
+.roombox:empty{display:none}
+@supports selector(:has(*)){
+  .seg{display:inline-flex;flex-wrap:nowrap;gap:2px;padding:3px;margin:0;border:1px solid var(--line-strong);border-radius:var(--radius)}
+  .seg label{position:relative;justify-content:center;min-width:5.25rem;min-height:40px;padding:0 16px;border-radius:5px;font-size:var(--fs-1);transition:background-color var(--dur-ui) var(--ease-out),color var(--dur-ui) var(--ease-out)}
+  .seg input[type=radio]{position:absolute;inset:0;width:100%;height:100%;margin:0;opacity:0;cursor:pointer}
+  .seg label:has(input:checked){background:var(--accent);color:var(--on-accent);font-weight:600}
+  .seg label:has(input:focus-visible){outline:3px solid var(--focus);outline-offset:2px}
+}
+
+/* Colophon */
+footer{padding:var(--space-xl) 0 0;overflow:hidden;overflow:clip}
+.wordmark{font-size:clamp(3rem,14vw,10.5rem);font-weight:600;line-height:.9;letter-spacing:-.045em;color:var(--line);white-space:nowrap;max-width:none;margin:0 0 var(--space-m) -.04em;-webkit-user-select:none;user-select:none}
+main p.colophon{max-width:62ch;margin:0}
+
+.printonly{display:none}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.hidden{display:none !important}
+main:focus{outline:none}
+
+/* Reduced motion: no transition and no animation anywhere in the tool. */
+@media (prefers-reduced-motion:reduce){main,main *,main *::before,main *::after{animation:none !important;transition:none !important}}
+
+@media print{
+  :root{--c-ground:#fff;--c-card:#fff;--c-ink:#000;--c-muted:#333}
+  .printonly{display:block}button,.btn,#start,#setup,#measure,#samples,.noprint{display:none !important}body{background:#fff;color:#000}.card,.verdict{break-inside:avoid}
+  main{max-width:none;padding:0}
+  #result{padding-top:0}
+  .wordmark,.plan,.roombox{display:none}
+  .card{padding:16px 0}
+  #print-head{margin:16px 0 12px;max-width:none}
+  .bar,.bar>*,.verdict,.verdict h2::before,.badge::before{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
 @media (max-width:480px){td.num{white-space:nowrap}}
-@media print{.printonly{display:block}button,.btn,#start,#setup,#measure,#samples,.noprint{display:none !important}body{background:#fff;color:#000}.card,.verdict{break-inside:avoid}}
 </style>
+<link rel="stylesheet" href="room/stage.css">
+<link rel="stylesheet" href="ui/enhance.css">
 </head>
 <body>
-<main>
-  <h1><svg aria-hidden="true" width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round"><circle cx="9" cy="14" r="2.5" fill="var(--accent)" stroke="none"/><path d="M14 9a7 7 0 0 1 0 10M19 5a13 13 0 0 1 0 18"/></svg>Echo Check+</h1>
-  <p class="lede">A free room echo check for classrooms. In about 2 minutes it shows whether echo at a student's seat is likely a problem, and who to ask next. <strong>The audio never leaves this device.</strong></p>
-
-  <section id="start" class="card" aria-labelledby="start-h">
-    <h2 id="start-h">Start</h2>
-    <p>You need: a laptop, tablet or phone with a microphone, the rough room size, and 2 minutes with the room empty and quiet.</p>
-    <div class="row">
-      <button id="go-check">Check a room</button>
-      <button id="go-samples" class="secondary">Try a sample room</button>
-      <button id="upload-btn" class="secondary">Upload a recording (WAV)</button>
-      <input id="upload" type="file" accept=".wav,audio/wav,audio/x-wav" class="hidden">
+<!-- STAGE START -->
+<section id="stage" class="stage" data-element="hero-room" aria-labelledby="stage-display">
+  <div class="stage-pin">
+    <div class="stage-media">
+      <picture class="stage-poster" data-element="poster">
+        <source media="(max-width:700px)" type="image/webp" srcset="room/assets/poster-hero-portrait.webp">
+        <source media="(max-width:700px)" srcset="room/assets/poster-hero-portrait.jpg">
+        <source media="(max-width:1200px)" type="image/webp" srcset="room/assets/poster-hero-1200.webp">
+        <source media="(max-width:1200px)" srcset="room/assets/poster-hero-1200.jpg">
+        <source type="image/webp" srcset="room/assets/poster-hero.webp">
+        <img src="room/assets/poster-hero.jpg" alt="An empty classroom at dusk, seen from the back corner: rows of desks, a slate board and tall windows." fetchpriority="high" decoding="async">
+      </picture>
+      <picture><source type="image/webp" srcset="room/assets/still-s2.webp"><img class="stage-still" data-station="2" src="room/assets/still-s2.jpg" alt="" loading="lazy" decoding="async" data-element="fallback-stills"></picture>
+      <picture><source type="image/webp" srcset="room/assets/still-s3.webp"><img class="stage-still" data-station="3" src="room/assets/still-s3.jpg" alt="" loading="lazy" decoding="async"></picture>
+      <canvas class="stage-canvas" data-element="sound-front" aria-hidden="true"></canvas>
+      <div class="stage-labels" data-element="surface-labels">
+        <p class="stage-label" data-at="clap"><i aria-hidden="true"></i><span>The clap</span></p>
+        <p class="stage-label" data-at="reflections"><i aria-hidden="true"></i><span>First reflections</span></p>
+        <p class="stage-label" data-at="mic"><i aria-hidden="true"></i><span>The laptop microphone</span></p>
+      </div>
     </div>
-    <div class="rules" id="rules">
+    <div class="stage-hud">
+      <fieldset class="stage-switch" data-element="room-switch">
+        <legend>Room</legend>
+        <label><input type="radio" name="stage-room" value="treated" checked><span>Treated · 0.45 s</span></label>
+        <label><input type="radio" name="stage-room" value="echoey"><span>Echoey · 1.1 s</span></label>
+      </fieldset>
+      <figure class="stage-chart" data-element="decay-chart">
+        <svg viewBox="0 0 200 96" role="img" aria-label="Sound level falling after a clap. In the treated room it is 60 dB down after 0.45 seconds; in the echoey room, after 1.1 seconds.">
+          <g aria-hidden="true">
+            <text class="c-word" x="8" y="10">Level</text>
+            <text class="c-word" x="196" y="73" text-anchor="end">Time</text>
+            <path class="c-axis" d="M8 16V70H166"/>
+            <line class="c-ghost" data-chart="ghost" x1="8" y1="16" x2="65" y2="70"/>
+            <line class="c-live" data-chart="line" x1="8" y1="16" x2="65" y2="70"/>
+            <g data-chart="end" transform="translate(65 70)"><path class="c-tick" d="M0 0V6"/><text class="c-word c-end" y="18" text-anchor="middle">60 dB down</text></g>
+            <circle class="c-head" data-chart="head" cx="65" cy="70" r="3.2"/>
+          </g>
+        </svg>
+      </figure>
+      <p class="stage-clock"><span data-stage="t">0.45</span> s after the clap</p>
+    </div>
+    <div class="stage-controls" data-element="motion-controls" hidden>
+      <button type="button" class="stage-btn" data-stage="clap">Clap again</button>
+      <button type="button" class="stage-btn" data-stage="pause">Pause</button>
+    </div>
+  </div>
+  <div class="stage-flow">
+    <header class="stage-hero">
+      <h1><svg aria-hidden="true" width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round"><circle cx="9" cy="14" r="2.5" fill="var(--accent)" stroke="none"/><path d="M14 9a7 7 0 0 1 0 10M19 5a13 13 0 0 1 0 18"/></svg>Echo Check+</h1>
+      <p class="stage-display" id="stage-display">How long does your classroom echo?</p>
+      <p class="lede">A free room echo check for classrooms. In about 2 minutes it shows whether echo at a student's seat is likely a problem, and who to ask next. <strong>The audio never leaves this device.</strong></p>
+      <div class="stage-cta">
+        <button type="button" class="stage-btn stage-btn--fill" data-proxy="go-check">Check a room</button>
+        <button type="button" class="stage-btn stage-btn--text" data-proxy="go-samples">Try a sample room</button>
+      </div>
+      <p class="stage-caption">Illustration: a box-shaped room of 30 × 25 × 10 ft with the same echo time, slowed down about <span data-stage="slow">60</span> times. It is a picture of the idea, not a measurement of any room.</p>
+    </header>
+    <ol class="stage-stations" data-element="camera-rail">
+      <li><p><strong>One clap.</strong> The sound leaves the front of the room in every direction.</p></li>
+      <li><p><strong>The room answers.</strong> Walls, floor and ceiling send it back, each bounce a little later and a little weaker.</p></li>
+      <li><p><strong>The echo time is how long that takes to fade.</strong> The US classroom standard asks for 0.6 s or less in most classrooms.</p></li>
+    </ol>
+  </div>
+</section>
+<!-- STAGE END -->
+<main>
+  <section id="start" class="card" aria-labelledby="start-h">
+    <h2 id="start-h" data-reveal>Start</h2>
+    <div class="start-top" data-reveal>
+      <div class="start-copy">
+        <p class="lead">You need: a laptop, tablet or phone with a microphone, the rough room size, and 2 minutes with the room empty and quiet.</p>
+        <div class="row actions">
+          <button id="go-check">Check a room</button>
+          <button id="go-samples" class="secondary">Try a sample room</button>
+          <button id="upload-btn" class="secondary">Upload a recording (WAV)</button>
+          <input id="upload" type="file" accept=".wav,audio/wav,audio/x-wav" class="hidden">
+        </div>
+      </div>
+      <svg class="plan" viewBox="20 10 320 270" role="img" aria-label="Plan of the set-up: you clap at the front of the room, and this device sits on a student desk 3–5 m (10–16 ft) away.">
+        <rect class="p-wall" x="30" y="20" width="300" height="250"/>
+        <path class="p-board" d="M110 27H250"/>
+        <g class="p-desk">
+          <rect x="47" y="98" width="30" height="16"/><rect x="87" y="98" width="30" height="16"/><rect x="127" y="98" width="30" height="16"/><rect x="203" y="98" width="30" height="16"/><rect x="243" y="98" width="30" height="16"/><rect x="283" y="98" width="30" height="16"/>
+          <rect x="47" y="150" width="30" height="16"/><rect x="87" y="150" width="30" height="16"/><rect x="127" y="150" width="30" height="16"/><rect x="203" y="150" width="30" height="16"/><rect x="243" y="150" width="30" height="16"/><rect x="283" y="150" width="30" height="16"/>
+          <rect x="47" y="198" width="30" height="16"/><rect x="87" y="198" width="30" height="16"/><rect x="127" y="198" width="30" height="16"/><rect x="243" y="198" width="30" height="16"/><rect x="283" y="198" width="30" height="16"/>
+        </g>
+        <path class="p-wave" d="M189.8 64.9A12 12 0 0 1 170.2 64.9"/>
+        <path class="p-wave" d="M198 70.6A22 22 0 0 1 162 70.6" opacity=".82"/>
+        <path class="p-wave" d="M206.2 76.4A32 32 0 0 1 153.8 76.4" opacity=".64"/>
+        <path class="p-wave" d="M214.4 82.1A42 42 0 0 1 145.6 82.1" opacity=".46"/>
+        <path class="p-dim" d="M180 66V206M174 206H186"/>
+        <path class="p-lead" d="M187 206H203M218 215V235"/>
+        <rect class="p-mark" x="203" y="198" width="30" height="16"/>
+        <circle class="p-clap" cx="180" cy="58" r="4"/>
+        <text x="192" y="55">You clap here</text>
+        <text x="218" y="250" text-anchor="middle">This device, on a student desk</text>
+        <text transform="translate(171 154) rotate(-90)" text-anchor="middle">3–5 m (10–16 ft)</text>
+      </svg>
+    </div>
+    <div class="rules" id="rules" data-reveal>
       <h3>Built to avoid a false pass</h3>
-      <ul class="list">
-        <li><strong>Blocked</strong> if the browser reports microphone processing on, or the audio shows clipping or a noise gate.</li>
-        <li><strong>Incomplete</strong> if the claps are not clean enough. It names the band and says what to change.</li>
-        <li><strong>"Under the limit"</strong> only with a margin: the 3-band average more than 15 % below the limit, and no band over it. Quiet claps can still say "Likely over", never "Under".</li>
+      <ul class="list guard">
+        <li class="g-block"><strong>Blocked</strong> <span>if the browser reports microphone processing on, or the audio shows clipping or a noise gate.</span></li>
+        <li class="g-part"><strong>Incomplete</strong> <span>if the claps are not clean enough. It names the band and says what to change.</span></li>
+        <li class="g-under"><strong>"Under the limit"</strong> <span>only with a margin: the 3-band average more than 15 % below the limit, and no band over it. Quiet claps can still say "Likely over", never "Under".</span></li>
       </ul>
     </div>
-    <p class="small">This is a room echo check, not a hearing test and not a compliance measurement.</p>
+    <p class="small" data-reveal>This is a room echo check, not a hearing test and not a compliance measurement.</p>
   </section>
 
   <section id="room" class="card" aria-labelledby="room-h">
-    <h2 id="room-h">1. Room size</h2>
-    <p>The US classroom limit depends on the room volume (ANSI/ASA S12.60-2010 Part 1).</p>
-    <div class="row" role="radiogroup" aria-label="Units">
-      <label><input type="radio" name="units" value="ft" checked> feet</label>
-      <label><input type="radio" name="units" value="m"> metres</label>
+    <h2 id="room-h" data-reveal><span class="n">1.</span> Room size</h2>
+    <p data-reveal>The US classroom limit depends on the room volume (ANSI/ASA S12.60-2010 Part 1).</p>
+    <div class="room-layout" data-reveal>
+      <div class="room-fields">
+        <div class="row seg" role="radiogroup" aria-label="Units">
+          <label><input type="radio" name="units" value="ft" checked> feet</label>
+          <label><input type="radio" name="units" value="m"> metres</label>
+        </div>
+        <div class="grid3">
+          <div><label for="len">Length</label><input id="len" type="number" min="1" step="0.1" inputmode="decimal" placeholder="30"></div>
+          <div><label for="wid">Width</label><input id="wid" type="number" min="1" step="0.1" inputmode="decimal" placeholder="25"></div>
+          <div><label for="hei">Height</label><input id="hei" type="number" min="1" step="0.1" inputmode="decimal" placeholder="10"></div>
+        </div>
+        <p id="vol-out" aria-live="polite" class="small">A typical classroom is about 30 × 25 × 10 ft = 7,500 cubic feet.</p>
+      </div>
+      <figure id="roombox" class="roombox" aria-hidden="true"></figure>
     </div>
-    <div class="grid3">
-      <div><label for="len">Length</label><input id="len" type="number" min="1" step="0.1" inputmode="decimal" placeholder="30"></div>
-      <div><label for="wid">Width</label><input id="wid" type="number" min="1" step="0.1" inputmode="decimal" placeholder="25"></div>
-      <div><label for="hei">Height</label><input id="hei" type="number" min="1" step="0.1" inputmode="decimal" placeholder="10"></div>
-    </div>
-    <p id="vol-out" aria-live="polite" class="small">A typical classroom is about 30 × 25 × 10 ft = 7,500 cubic feet.</p>
   </section>
 
   <section id="setup" class="card hidden" aria-labelledby="setup-h">
-    <h2 id="setup-h">2. Set up</h2>
+    <h2 id="setup-h"><span class="n">2.</span> Set up</h2>
     <ol class="steps">
       <li><strong>Put this device on a student desk about 3–5 m (10–16 ft) from where you will clap,</strong> for example in the second or third row. Seats farther away often give no result unless the room is very quiet; seats closer than 3 m (10 ft) can miss part of the echo. Keep the microphone uncovered. Point the screen toward the front so you can see the big prompts.</li>
       <li><strong>Turn off microphone effects</strong> for this device: <span id="os-steps"></span></li>
@@ -144,7 +409,7 @@ button:hover:not(:disabled){filter:brightness(1.08)}
   </section>
 
   <section id="measure" class="card hidden" aria-labelledby="measure-h">
-    <h2 id="measure-h" tabindex="-1">3. Recording</h2>
+    <h2 id="measure-h" tabindex="-1"><span class="n">3.</span> Recording</h2>
     <div id="phase" class="phase">Walk to the front quietly</div>
     <div id="cue" class="sr-only" aria-live="polite"></div>
     <div id="count" class="count">45</div>
@@ -219,10 +484,21 @@ button:hover:not(:disabled){filter:brightness(1.08)}
     </div>
   </section>
 
-  <footer>
-    Echo Check+ is a student project for STEMergent Hacks 2026. Method: octave bands 500/1000/2000 Hz, Schroeder integration with Lundeby-style noise handling, T20 per band is the median over the usable claps among the first 4; verdict on the 3-band average. Nothing is uploaded: the analysis runs in this browser.
+  <footer data-reveal>
+    <p class="wordmark" aria-hidden="true">Echo Check+</p>
+    <p class="colophon">Echo Check+ is a student project for STEMergent Hacks 2026. Method: octave bands 500/1000/2000 Hz, Schroeder integration with Lundeby-style noise handling, T20 per band is the median over the usable claps among the first 4; verdict on the 3-band average. Nothing is uploaded: the analysis runs in this browser.</p>
   </footer>
 </main>
 <script type="module" src="app.js"></script>
+<script>
+/* Stage glue that must not wait for the 3D code: the stage shows only with the Start card, and its two buttons stand in for the Start card's own. */
+(function(){var s=document.getElementById('stage'),st=document.getElementById('start'),m=document.querySelector('main');if(!s||!st)return;
+function sync(){var h=st.classList.contains('hidden');if(s.hidden===h)return;s.hidden=h;if(!h)window.scrollTo(0,0)}
+try{new MutationObserver(sync).observe(st,{attributes:true,attributeFilter:['class']})}catch(e){}sync();
+s.addEventListener('click',function(e){var b=e.target.closest?e.target.closest('[data-proxy]'):null;if(!b)return;var t=document.getElementById(b.getAttribute('data-proxy'));if(t)t.click();if(m){m.setAttribute('tabindex','-1');m.scrollIntoView({block:'start'});try{m.focus({preventScroll:true})}catch(x){}}});
+s.setAttribute('data-proxies','page')})();
+</script>
+<script type="module">import('./room/main.js').catch(()=>{})</script>
+<script type="module">import('./ui/enhance.js').catch(()=>{})</script>
 </body>
 </html>

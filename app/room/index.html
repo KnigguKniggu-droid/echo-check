@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Echo Check+</title>
+<link rel="icon" href="data:,">
+<!-- Standalone demo of the stage. The block between STAGE START and STAGE END is what goes into app/index.html.
+     When it moves one folder up: every  ="assets/  in the block becomes  ="room/assets/ , the stylesheet below
+     becomes room/stage.css, and the import at the bottom becomes ./room/main.js. Nothing else changes. -->
+<style>
+:root{--c-ground:#f5f3ee;--c-ink:#16212d;--c-base:#1e2f42;--c-on-base:#f5f3ee;--c-accent:#f2b632;--c-muted:#566170;--c-line:#d8d4ca;--c-card:#fbfaf7}
+*{box-sizing:border-box}
+body{margin:0;background:var(--c-ground);color:var(--c-ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+</style>
+<link rel="stylesheet" href="stage.css">
+</head>
+<body>
+<!-- STAGE START -->
+<section id="stage" class="stage" data-element="hero-room" aria-labelledby="stage-display">
+  <div class="stage-pin">
+    <div class="stage-media">
+      <picture class="stage-poster" data-element="poster">
+        <source media="(max-width:700px)" type="image/webp" srcset="assets/poster-hero-portrait.webp">
+        <source media="(max-width:700px)" srcset="assets/poster-hero-portrait.jpg">
+        <source media="(max-width:1200px)" type="image/webp" srcset="assets/poster-hero-1200.webp">
+        <source media="(max-width:1200px)" srcset="assets/poster-hero-1200.jpg">
+        <source type="image/webp" srcset="assets/poster-hero.webp">
+        <img src="assets/poster-hero.jpg" alt="An empty classroom at dusk, seen from the back corner: rows of desks, a slate board and tall windows." fetchpriority="high" decoding="async">
+      </picture>
+      <picture><source type="image/webp" srcset="assets/still-s2.webp"><img class="stage-still" data-station="2" src="assets/still-s2.jpg" alt="" loading="lazy" decoding="async" data-element="fallback-stills"></picture>
+      <picture><source type="image/webp" srcset="assets/still-s3.webp"><img class="stage-still" data-station="3" src="assets/still-s3.jpg" alt="" loading="lazy" decoding="async"></picture>
+      <canvas class="stage-canvas" data-element="sound-front" aria-hidden="true"></canvas>
+      <div class="stage-labels" data-element="surface-labels">
+        <p class="stage-label" data-at="clap"><i aria-hidden="true"></i><span>The clap</span></p>
+        <p class="stage-label" data-at="reflections"><i aria-hidden="true"></i><span>First reflections</span></p>
+        <p class="stage-label" data-at="mic"><i aria-hidden="true"></i><span>The laptop microphone</span></p>
+      </div>
+    </div>
+    <div class="stage-hud">
+      <fieldset class="stage-switch" data-element="room-switch">
+        <legend>Room</legend>
+        <label><input type="radio" name="stage-room" value="treated" checked><span>Treated · 0.45 s</span></label>
+        <label><input type="radio" name="stage-room" value="echoey"><span>Echoey · 1.1 s</span></label>
+      </fieldset>
+      <figure class="stage-chart" data-element="decay-chart">
+        <svg viewBox="0 0 200 96" role="img" aria-label="Sound level falling after a clap. In the treated room it is 60 dB down after 0.45 seconds; in the echoey room, after 1.1 seconds.">
+          <g aria-hidden="true">
+            <text class="c-word" x="8" y="10">Level</text>
+            <text class="c-word" x="196" y="73" text-anchor="end">Time</text>
+            <path class="c-axis" d="M8 16V70H166"/>
+            <line class="c-ghost" data-chart="ghost" x1="8" y1="16" x2="65" y2="70"/>
+            <line class="c-live" data-chart="line" x1="8" y1="16" x2="65" y2="70"/>
+            <g data-chart="end" transform="translate(65 70)"><path class="c-tick" d="M0 0V6"/><text class="c-word c-end" y="18" text-anchor="middle">60 dB down</text></g>
+            <circle class="c-head" data-chart="head" cx="65" cy="70" r="3.2"/>
+          </g>
+        </svg>
+      </figure>
+      <p class="stage-clock"><span data-stage="t">0.45</span> s after the clap</p>
+    </div>
+    <div class="stage-controls" data-element="motion-controls" hidden>
+      <button type="button" class="stage-btn" data-stage="clap">Clap again</button>
+      <button type="button" class="stage-btn" data-stage="pause">Pause</button>
+    </div>
+  </div>
+  <div class="stage-flow">
+    <header class="stage-hero">
+      <h1><svg aria-hidden="true" width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round"><circle cx="9" cy="14" r="2.5" fill="var(--accent)" stroke="none"/><path d="M14 9a7 7 0 0 1 0 10M19 5a13 13 0 0 1 0 18"/></svg>Echo Check+</h1>
+      <p class="stage-display" id="stage-display">How long does your classroom echo?</p>
+      <p class="lede">A free room echo check for classrooms. In about 2 minutes it shows whether echo at a student's seat is likely a problem, and who to ask next. <strong>The audio never leaves this device.</strong></p>
+      <div class="stage-cta">
+        <button type="button" class="stage-btn stage-btn--fill" data-proxy="go-check">Check a room</button>
+        <button type="button" class="stage-btn stage-btn--text" data-proxy="go-samples">Try a sample room</button>
+      </div>
+      <p class="stage-caption">Illustration: a box-shaped room of 30 × 25 × 10 ft with the same echo time, slowed down about <span data-stage="slow">60</span> times. It is a picture of the idea, not a measurement of any room.</p>
+    </header>
+    <ol class="stage-stations" data-element="camera-rail">
+      <li><p><strong>One clap.</strong> The sound leaves the front of the room in every direction.</p></li>
+      <li><p><strong>The room answers.</strong> Walls, floor and ceiling send it back, each bounce a little later and a little weaker.</p></li>
+      <li><p><strong>The echo time is how long that takes to fade.</strong> The US classroom standard asks for 0.6 s or less in most classrooms.</p></li>
+    </ol>
+  </div>
+</section>
+<!-- STAGE END -->
+<main id="demo-main" tabindex="-1" style="max-width:760px;margin:0 auto;padding:16px;min-height:60vh"></main>
+<script type="module">import('./main.js').catch(()=>{})</script>
+</body>
+</html>

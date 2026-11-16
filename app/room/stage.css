@@ -1,0 +1,134 @@
+/* Echo Check+ stage: the first screen (DESIGN.md sections 3 and 5). Everything is scoped to #stage.
+   The stage is always the slate board with light text, in both colour schemes. */
+@font-face{font-family:"Archivo";font-style:normal;font-weight:100 900;font-stretch:62% 125%;font-display:swap;src:url("../fonts/Archivo-100_900.woff2") format("woff2")}
+
+#stage{
+  --s-base:var(--c-base,#1e2f42);
+  --s-on:var(--c-on-base,#f5f3ee);
+  --s-accent:var(--c-accent,#f2b632);
+  --s-ink:#16212d;
+  --s-plate:rgba(22,33,45,.8);
+  --s-hair:rgba(245,243,238,.22);
+  --s-soft:rgba(245,243,238,.82);
+  --s-pad:clamp(20px,4vw,56px);
+  --s-out:cubic-bezier(.22,1,.36,1);
+  position:relative;background:var(--s-base);color:var(--s-on);
+  font-family:"Archivo",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:1rem;line-height:1.5;
+}
+#stage[hidden]{display:none!important}
+#stage *,#stage *::before,#stage *::after{box-sizing:border-box}
+#stage p{margin:0}
+
+/* ---------- the pinned picture ---------- */
+#stage .stage-pin{position:sticky;top:0;height:100vh;height:100svh;min-height:620px;overflow:hidden}
+#stage .stage-media{position:absolute;inset:0;background:var(--s-base);touch-action:pan-y;-webkit-user-select:none;user-select:none}
+#stage .stage-media[data-drag]{cursor:grab}
+#stage .stage-media[data-drag="held"]{cursor:grabbing}
+#stage .stage-poster img,#stage .stage-still,#stage .stage-canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+#stage .stage-poster img,#stage .stage-still{object-fit:cover;object-position:50% 50%;color:transparent}
+#stage .stage-still{opacity:0;transition:opacity .45s var(--s-out)}
+#stage .stage-still.is-on{opacity:1}
+#stage .stage-canvas{opacity:0}
+/* a straight scrim under the words: the floor end of the picture, never a glow behind a subject */
+#stage .stage-media::after{content:"";position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(to top,rgba(22,33,45,.86) 0%,rgba(22,33,45,.54) 28%,rgba(22,33,45,.2) 50%,rgba(22,33,45,0) 64%),linear-gradient(to right,rgba(22,33,45,.5) 0%,rgba(22,33,45,.24) 30%,rgba(22,33,45,0) 62%),linear-gradient(to bottom,rgba(22,33,45,.5) 0%,rgba(22,33,45,0) 16%)}
+
+/* ---------- labels pinned to points in the room ---------- */
+#stage .stage-labels{position:absolute;inset:0;pointer-events:none;z-index:1}
+#stage .stage-label{position:absolute;left:0;top:0;display:flex;align-items:center;gap:8px;white-space:nowrap;opacity:0;
+  font-size:.8125rem;font-weight:500;line-height:1.2;letter-spacing:.01em;transition:opacity .35s var(--s-out);will-change:transform}
+#stage .stage-label.is-on{opacity:1}
+#stage .stage-label i{flex:none;width:9px;height:9px;margin-left:-4.5px;border-radius:50%;border:1.5px solid var(--s-on);background:rgba(22,33,45,.55)}
+#stage .stage-label span{padding:3px 8px;border-radius:6px;background:var(--s-plate);border:1px solid var(--s-hair)}
+#stage .stage-label[data-side="left"]{flex-direction:row-reverse}
+#stage .stage-label[data-side="left"] i{margin-left:0;margin-right:-4.5px}
+
+/* ---------- HUD: switch, chart, clock ---------- */
+#stage .stage-hud{position:absolute;z-index:2;top:clamp(16px,2.4vw,30px);right:clamp(16px,3vw,44px);width:min(286px,34vw);
+  padding:12px 14px 12px;border-radius:12px;background:var(--s-plate);border:1px solid var(--s-hair)}
+#stage .stage-switch{margin:0;padding:0;border:0;min-width:0;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:4px}
+#stage .stage-switch legend{padding:0;margin:0 0 6px;font-size:.8125rem;font-weight:500;color:var(--s-soft)}
+#stage .stage-switch label{position:relative;display:block;font-weight:500;cursor:pointer}
+#stage .stage-switch input{position:absolute;inset:0;width:100%;height:100%;margin:0;opacity:0;cursor:pointer}
+#stage .stage-switch span{display:flex;align-items:center;justify-content:center;min-height:44px;padding:6px 8px;border-radius:8px;
+  border:1px solid var(--s-hair);font-size:.875rem;font-variant-numeric:tabular-nums;white-space:nowrap;
+  transition:background-color .25s var(--s-out),color .25s var(--s-out),border-color .25s var(--s-out)}
+#stage .stage-switch label:hover span{border-color:var(--s-on)}
+#stage .stage-switch input:checked+span{background:var(--s-on);color:var(--s-ink);border-color:var(--s-on);font-weight:600}
+#stage .stage-switch input:focus-visible+span{outline:3px solid var(--s-accent);outline-offset:2px}
+#stage .stage-chart{margin:10px 0 0}
+#stage .stage-chart svg{display:block;width:100%;height:auto;overflow:visible}
+#stage .c-word{font-family:inherit;font-size:9px;fill:var(--s-soft)}
+#stage .c-end{fill:var(--s-on);font-weight:600;font-variant-numeric:tabular-nums}
+#stage .c-axis,#stage .c-tick{fill:none;stroke:rgba(245,243,238,.5);stroke-width:1;vector-effect:non-scaling-stroke}
+#stage .c-ghost{stroke:rgba(245,243,238,.34);stroke-width:1;stroke-dasharray:2 3;vector-effect:non-scaling-stroke}
+#stage .c-live{stroke:var(--s-accent);stroke-width:2;stroke-linecap:round;vector-effect:non-scaling-stroke}
+#stage .c-head{fill:var(--s-accent);stroke:var(--s-ink);stroke-width:1;vector-effect:non-scaling-stroke}
+#stage .stage-clock{margin-top:8px;font-size:.9375rem;color:var(--s-soft)}
+#stage .stage-clock span{display:inline-block;min-width:4ch;font-size:1.5rem;font-weight:600;line-height:1.1;color:var(--s-on);font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+
+/* ---------- buttons ---------- */
+#stage .stage-btn{appearance:none;font:inherit;font-weight:600;font-size:1rem;line-height:1.2;min-height:44px;padding:11px 18px;border-radius:8px;
+  border:1px solid var(--s-hair);background:var(--s-plate);color:var(--s-on);cursor:pointer;text-decoration:none;filter:none;box-shadow:none;
+  transition:background-color .25s var(--s-out),border-color .25s var(--s-out),color .25s var(--s-out)}
+#stage .stage-btn:hover{border-color:var(--s-on);filter:none}
+#stage .stage-btn:focus-visible{outline:3px solid var(--s-accent);outline-offset:2px}
+#stage .stage-btn--fill{background:var(--s-on);color:var(--s-ink);border-color:var(--s-on);padding:13px 24px}
+#stage .stage-btn--fill:hover{background:#fff;border-color:#fff}
+#stage .stage-btn--text{background:transparent;border-color:transparent;padding-inline:8px;text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:.3em}
+#stage .stage-btn--text:hover{border-color:transparent;text-decoration-thickness:2px}
+#stage .stage-controls{position:absolute;z-index:2;right:clamp(16px,3vw,44px);bottom:clamp(18px,2.6vw,36px);display:flex;gap:8px}
+#stage .stage-controls[hidden]{display:none}
+#stage .stage-controls .stage-btn{font-size:.9375rem;padding:10px 14px;min-width:6.4em}
+
+/* ---------- the words that scroll over the pinned picture ---------- */
+#stage .stage-flow{position:relative;z-index:1;margin-top:calc(-1 * max(100vh,620px));margin-top:calc(-1 * max(100svh,620px));pointer-events:none}
+#stage .stage-hero{height:100vh;height:100svh;min-height:620px;display:flex;flex-direction:column;align-items:flex-start;
+  padding:clamp(18px,2.6vw,34px) var(--s-pad) clamp(18px,2.6vw,36px)}
+#stage .stage-hero>*{pointer-events:auto}
+#stage h1{display:flex;align-items:center;gap:10px;margin:0;font-size:1.25rem;font-weight:600;line-height:1.2;letter-spacing:0;color:var(--s-on)}
+#stage h1 svg{flex:none;width:24px;height:24px;stroke:var(--s-on)}
+#stage h1 svg circle{fill:var(--s-on)}
+#stage .stage-display{margin-top:auto;max-width:17.5ch;font-size:clamp(2.6rem,7.2vw,6.5rem);font-weight:600;font-stretch:100%;line-height:.96;letter-spacing:-.025em;text-wrap:balance}
+#stage .lede{margin:clamp(14px,1.6vw,22px) 0 0;max-width:min(58ch,calc(100% - 300px));font-size:1.0625rem;line-height:1.5;color:var(--s-soft)}
+#stage .lede strong{color:var(--s-on);font-weight:600}
+#stage .stage-cta{display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;margin-top:clamp(16px,1.8vw,24px)}
+#stage .stage-caption{margin-top:clamp(14px,1.6vw,22px);max-width:min(78ch,calc(100% - 300px));font-size:.8125rem;line-height:1.45;color:var(--s-soft);font-variant-numeric:tabular-nums}
+#stage .stage-stations{list-style:none;margin:0;padding:0 var(--s-pad)}
+#stage .stage-stations li{min-height:88vh;min-height:88svh;display:flex;align-items:flex-end;padding-bottom:20vh}
+#stage .stage-stations p{pointer-events:auto;max-width:31ch;padding:16px 20px;border-radius:12px;background:var(--s-plate);border:1px solid var(--s-hair);
+  font-size:clamp(1.2rem,1.9vw,1.6rem);line-height:1.3;color:var(--s-soft);text-wrap:pretty}
+#stage .stage-stations strong{color:var(--s-on);font-weight:600}
+
+/* ---------- 390 px: re-composed, the room on top and the words on the slate below ---------- */
+@media (max-width:700px){
+  #stage{display:grid;grid-template-columns:minmax(0,1fr);padding-bottom:28px}
+  #stage .stage-pin,#stage .stage-hud,#stage .stage-flow,#stage .stage-hero{display:contents}
+  #stage .stage-media{position:relative;inset:auto;grid-column:1;grid-row:1;height:52vh;height:52svh;min-height:300px}
+  #stage .stage-media::after{background:linear-gradient(to top,var(--s-base) 0%,rgba(30,47,66,.72) 14%,rgba(30,47,66,0) 40%),linear-gradient(to bottom,rgba(22,33,45,.55) 0%,rgba(22,33,45,0) 22%)}
+  #stage h1{grid-column:1;grid-row:1;align-self:start;justify-self:start;z-index:2;margin:20px 0 0 16px;font-size:1.0625rem;pointer-events:auto}
+  #stage h1 svg{width:20px;height:20px}
+  #stage .stage-switch{grid-column:1;grid-row:1;align-self:start;justify-self:end;z-index:2;margin:58px 12px 0 0;gap:0;padding:3px;border-radius:10px;background:var(--s-plate);border:1px solid var(--s-hair);pointer-events:auto}
+  #stage .stage-switch legend{position:absolute;width:1px;height:1px;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}
+  #stage .stage-switch span{min-height:38px;padding:4px 9px;font-size:.8125rem;border-color:transparent;border-radius:7px}
+  #stage .stage-clock{grid-column:1;grid-row:1;align-self:start;justify-self:end;z-index:2;margin:14px 12px 0 0;padding:4px 10px;border-radius:8px;background:var(--s-plate);border:1px solid var(--s-hair);font-size:.8125rem}
+  #stage .stage-clock span{font-size:1.0625rem;min-width:3.6ch}
+  #stage .stage-display{grid-column:1;grid-row:2;z-index:2;margin:-1.55em 16px 0;max-width:none;font-size:clamp(2.6rem,12vw,3.4rem);pointer-events:auto}
+  #stage .lede{grid-column:1;grid-row:3;margin:14px 16px 0;max-width:none;font-size:1rem}
+  #stage .stage-cta{grid-column:1;grid-row:4;margin:18px 16px 0}
+  #stage .stage-chart{grid-column:1;grid-row:5;margin:26px 16px 0;max-width:330px}
+  #stage .stage-controls{position:static;grid-column:1;grid-row:6;margin:14px 16px 0}
+  #stage .stage-caption{grid-column:1;grid-row:7;margin:18px 16px 0;max-width:none}
+  #stage .stage-stations{grid-column:1;grid-row:8;margin:26px 16px 0;padding:18px 0 0;border-top:1px solid var(--s-hair);display:grid;gap:12px}
+  #stage .stage-stations li{min-height:0;display:block;padding:0}
+  #stage .stage-stations p{max-width:none;padding:0;border:0;border-radius:0;background:none;font-size:1.0625rem;line-height:1.45}
+  #stage .stage-label{font-size:.75rem}
+}
+@media (max-width:1000px) and (min-width:701px){
+  #stage .lede,#stage .stage-caption{max-width:min(58ch,100%)}
+  #stage .stage-controls{bottom:auto;top:calc(clamp(16px,2.4vw,30px) + 268px)}
+}
+@media (prefers-reduced-motion:reduce){
+  #stage .stage-label,#stage .stage-btn,#stage .stage-switch span{transition-duration:.01s}
+}
+@media print{#stage{display:none!important}}

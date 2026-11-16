@@ -1,0 +1,72 @@
+/* =============================================================
+   Echo Check+ page enhancements: smooth wheel scrolling, rise-in
+   on scroll, and the room-size drawing. Everything here is optional:
+   the page reads and works the same if enhance.js never runs.
+   Nothing here loads from another site.
+   ============================================================= */
+@import "./vendor/lenis/lenis.css";
+
+/* ---------- rise in when scrolled to ----------
+   The hidden-before state exists only after enhance.js has put
+   "js-reveal" on <html>, only on screen, and only when the reader
+   has not asked for reduced motion. */
+@media screen and (prefers-reduced-motion: no-preference) {
+  html.js-reveal [data-reveal] {
+    opacity: 0;
+    transform: translateY(14px);
+    transition:
+      opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+      transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  html.js-reveal [data-reveal].is-in {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ---------- room-size drawing ---------- */
+.roombox {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 420px;
+  aspect-ratio: 4 / 3;
+  margin: 0;
+  padding: 0;
+  color: var(--c-muted, #566170);
+  font-size: var(--fs-small, 0.875rem);
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.roombox:empty {
+  display: none;
+}
+.roombox svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.roombox .rb-edge,
+.roombox .rb-back {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.25;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.roombox .rb-back {
+  stroke-width: 1;
+  stroke-dasharray: 3 4;
+  opacity: 0.75;
+}
+.roombox .rb-floor {
+  fill: var(--c-accent, #f2b632);
+  fill-opacity: 0.24;
+  stroke: none;
+}
+.roombox text {
+  fill: currentColor;
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+}
