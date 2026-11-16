@@ -10,6 +10,10 @@ Four claps in a browser tab: a classroom echo estimate against the ANSI/ASA S12.
 
 Built for STEMergent Hacks 2026 by William and Kartikeya.
 
+## What you see first
+
+The page opens on a picture of an empty classroom at dusk. When the browser has WebGL 2 and reduced motion is off, the picture becomes a live 3D scene. One clap at the front sends a sound front across the room. The walls, floor and ceiling send it back, and it fades at the room's echo time, slowed down about 60 times. A switch compares a treated room (0.45 s) with an echoey room (1.1 s). A small chart and a clock show the level falling in real room time. The scene is an illustration of a box-shaped 30 x 25 x 10 ft room. It is not a measurement of any room. The 3D code does not use the measuring engine, and the page plays no sound. **Check a room** and **Try a sample room** open the tool below it. The tool's logic and verdicts did not change after the deadline. Without WebGL 2, with reduced motion on, or if the 3D fails to load, the still picture stays and the tool works the same.
+
 ## 1. The problem
 
 Echo (reverberation) makes speech harder to follow in a classroom.
@@ -72,7 +76,11 @@ The engine is about 615 lines of dependency-free JavaScript (`engine/echo-engine
 
 | Folder | Contents |
 |---|---|
-| `app/` | The web page (`index.html`, `app.js`); `app/room/` is the 3D first screen (three.js in `app/vendor/`), `app/ui/` the scrolling and chalk details. No build step. |
+| `app/` | The web page: `index.html`, `app.js` (the tool's logic) and `tokens.css` (colours, type, spacing). No build step. The front-end spec is `DESIGN.md` (team repository). |
+| `app/room/` | The 3D first screen: `main.js` (start-up, still-picture fallback, switch, chart, controls), `scene.js` (the three.js scene and the sound front), `model.js` (room size, echo times, image-source maths), `stage.css`, `index.html` (the first screen alone) and `assets/` (the compressed classroom model, camera positions, still pictures). |
+| `app/ui/` | Scroll reveals, the chalk details and smooth scrolling (`enhance.js`, `enhance.css`, `chalk.js`, `chalk.css`, `roll.css`). `vendor/lenis/` holds Lenis (MIT). |
+| `app/vendor/` | `three/`: three.js r185 (minified build, GLTFLoader, the meshopt decoder and utilities), with its MIT licence. |
+| `app/fonts/` | The Archivo variable font, with its SIL OFL 1.1 text. |
 | `engine/` | `echo-engine.js` (analysis, trust checks, verdict); `synth.js` (the simulated sample recordings); `cli.js` (checks a WAV file from the command line); `test/` (the 27 tests); `REFERENCE_VALUES.md` (every test result in this README, with method and caveats). |
 | `recorder/` | A test page that records one take and saves it with the settings the browser reports. For device tests. |
 | `version.txt` | Which commit of the team repository is live. |
@@ -125,6 +133,7 @@ We always give two numbers: **false passes** and the **Incomplete rate** (no ver
 
 ### Changes after the deadline
 
+- **2026-11-15, 21:15 CST:** we published the new first screen (the 3D classroom illustration) and a new page style, after the 19:00 CST rules time and before the 21:30 CST Devpost close. The measuring engine (`engine/`) and the tool's logic (`app/app.js`) did not change after the first submission (last commit 14:07 CST on 15 November). The video and the Devpost screenshots show the page before this change.
 - **2026-11-15, 21:39 CST:** two bug fixes found by our own audit of the redesign. In dark mode, the small text on the recording screen now has readable contrast. On Safari and on phones, "Check a room" and "Try a sample room" now land on the right section. The measuring engine, the verdicts and the wording did not change.
 - **2026-11-15, 22:46 CST:** wording and accessibility fixes from our own audit: the 3D panel is labelled as an illustration, the intro promises an estimate, plus clearer focus and reading order, text spacing and small browser fixes. Performance: the 3D scene now loads only when it is on screen, and it is skipped on slow networks, low-memory phones and weak graphics chips. The measuring engine and the verdicts did not change.
 - **2026-11-16:** the 3D first screen no longer switches itself to the still picture when the computer is busy or the graphics chip reports a performance caveat (that rule from the 22:46 change hid the 3D scene on some machines). Nothing else changed.
@@ -167,7 +176,7 @@ Papers and standards behind the rules: ANSI/ASA S12.60-2010 Part 1 (text not rep
 
 ### Built with
 
-JavaScript. The measuring engine uses no libraries; the 3D first screen uses three.js (MIT) with the meshoptimizer decoder (MIT), smooth scrolling uses Lenis (MIT), and the typeface is Archivo (SIL Open Font License 1.1), Web Audio API (AudioWorklet), getUserMedia, GitHub Pages. Testing only: Node.js, Python, NumPy, SciPy, pyrato and pyfar, pyroomacoustics, headless Google Chrome.
+JavaScript, Web Audio API (AudioWorklet), getUserMedia, GitHub Pages. The measuring engine uses no libraries. The first screen and the page style use copies inside `app/`, and nothing loads from another site: three.js r185 with its GLTFLoader and the meshoptimizer decoder (MIT License); Lenis for smooth scrolling (MIT License); the Archivo typeface (SIL Open Font License 1.1). The classroom model was built with Blender (per `DESIGN.md` and `HANDOFF.md`; the exported file records only glTF-Transform) and compressed with glTF-Transform. UNVERIFIED: the source and licence of the model's three textures. Testing only: Node.js, Python, NumPy, SciPy, pyrato and pyfar, pyroomacoustics, headless Google Chrome.
 
 ### Team
 
@@ -175,7 +184,7 @@ William and Kartikeya.
 
 ### AI assistance
 
-Claude Code sessions (Anthropic) wrote most of the code and most of the text in this repository, under the team's direction. The team made the decisions, ran the device test and did the expert outreach. The test numbers in this README come from `engine/REFERENCE_VALUES.md`.
+Claude Code sessions (Anthropic) wrote most of the code and most of the text in this repository, under the team's direction. The Lead session built the 3D first screen and the restyle under William's direction. The Partner session built the engine, the tests and the fixes under Kartikeya's direction. The team made the decisions, ran the device test and did the expert outreach. The test numbers in this README come from `engine/REFERENCE_VALUES.md`.
 
 ### Licence
 
