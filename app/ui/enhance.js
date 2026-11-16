@@ -90,6 +90,13 @@ function setupRoomBox() {
     const c = document.querySelector('input[name=units]:checked');
     return c && c.value === 'm' ? 'm' : 'ft';
   };
+  // The placeholders follow the unit, so an empty field never reads as 30 m (the same room, about 9.1 x 7.6 x 3 m).
+  const PLACEHOLDERS = { ft: ['30', '25', '10'], m: ['9.1', '7.6', '3'] };
+  const syncPlaceholders = () => {
+    const p = PLACEHOLDERS[unit()];
+    ['l', 'w', 'h'].forEach((k, i) => { if (inputs[k] && inputs[k].placeholder !== p[i]) inputs[k].placeholder = p[i]; });
+  };
+  syncPlaceholders();
   const fmt = (v) => String(Math.round(v * 10) / 10);
 
   const COS = Math.cos(Math.PI / 6) * 0.5; // cabinet projection: depth at 30 degrees, half length
@@ -152,6 +159,7 @@ function setupRoomBox() {
 
   const update = () => {
     try {
+      syncPlaceholders();
       const next = read();
       const same = next.l === target.l && next.w === target.w && next.h === target.h;
       target = next;
@@ -200,6 +208,9 @@ function setupRoomBox() {
 /* ---------- 3. smooth wheel scrolling ---------- */
 async function setupSmoothScroll() {
   if (reduced()) return;
+  // Touch screens keep the browser's own scrolling (syncTouch is off), so Lenis would only
+  // run an idle frame loop there for the whole visit, recording included.
+  if (window.matchMedia && window.matchMedia('(pointer: coarse)').matches) return;
   const mod = await import('./vendor/lenis/lenis.mjs');
   const Lenis = mod.default;
   if (reduced()) return;

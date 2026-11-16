@@ -126,6 +126,7 @@ We always give two numbers: **false passes** and the **Incomplete rate** (no ver
 ### Changes after the deadline
 
 - **2026-11-15, 21:39 CST:** two bug fixes found by our own audit of the redesign. In dark mode, the small text on the recording screen now has readable contrast. On Safari and on phones, "Check a room" and "Try a sample room" now land on the right section. The measuring engine, the verdicts and the wording did not change.
+- **2026-11-15, 22:46 CST:** wording and accessibility fixes from our own audit: the 3D panel is labelled as an illustration, the intro promises an estimate, plus clearer focus and reading order, text spacing and small browser fixes. Performance: the 3D scene now loads only when it is on screen, and it is skipped on slow networks, low-memory phones and weak graphics chips. The measuring engine and the verdicts did not change.
 
 ## 7. Feasibility
 

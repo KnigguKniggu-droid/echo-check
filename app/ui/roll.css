@@ -1,4 +1,4 @@
-.roll{display:grid;overflow:hidden;height:1.2em;line-height:1.2;vertical-align:bottom}
+.roll{display:grid;overflow:hidden;height:1.2em;height:1lh;line-height:1.2;vertical-align:bottom}
 .roll>span{grid-area:1/1;white-space:nowrap;text-align:center;transition:none}
 .roll>span+span{contain:inline-size;transform:translateY(100%)}
 @media (hover:hover) and (prefers-reduced-motion:no-preference){

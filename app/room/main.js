@@ -101,7 +101,11 @@ function boot() {
 
   // ---------- the loop: one requestAnimationFrame, stopped whenever nobody can see it ----------
   let scene = null, raf = 0, last = 0, inView = true, dpr = 1;
-  const ft = [];
+  // ft holds frame times in 60 Hz terms. A steady 30 Hz pace (iOS Low Power Mode, a browser energy saver) is the
+  // display's pace, not a slow GPU, so those frame times count half. The first 30 frames set the scale. A GPU that
+  // holds a steady 30 fps on a 60 Hz display looks the same and keeps its quality.
+  const ft = [], firstFt = [];
+  let frameScale = 0;
   const startHidden = () => !!(startCard && startCard.classList.contains('hidden'));
   const canRun = () => S.mode === 'live' && scene && inView && !document.hidden && !stage.hidden;
   function kick() { settled = false; if (!raf && canRun()) { last = 0; raf = requestAnimationFrame(frame); S.running = true; } }
@@ -110,7 +114,11 @@ function boot() {
     raf = 0;
     if (!canRun()) { S.running = false; return; }
     const dt = last ? Math.min(0.05, (now - last) / 1000) : 1 / 60;
-    if (last) { ft.push(now - last); if (ft.length > 240) ft.shift(); }
+    if (last) {
+      const d = now - last;
+      if (!frameScale) { firstFt.push(d); if (firstFt.length >= 30) { const p25 = [...firstFt].sort((a, b) => a - b)[7]; frameScale = p25 > 30 && p25 < 36.5 ? 0.5 : 1; } }
+      else { ft.push(d * frameScale); if (ft.length > 240) ft.shift(); }
+    }
     last = now;
     try {
       if (!S.paused) {
@@ -129,14 +137,15 @@ function boot() {
       scene.render(cam, S.t, S.T);
       S.frames++;
       drawChart(); placeLabels();
-      if (S.frames % 90 === 0) adapt();
+      if (S.frames % 30 === 0) adapt();
     } catch (e) { fallback('render error'); return; }
     if (S.paused && settled) { S.running = false; return; }   // a paused, resting picture needs no more frames
     raf = requestAnimationFrame(frame);
   }
   function adapt() {                                           // fewer grains, then fewer pixels, if frames run long
-    if (ft.length < 60) return;
+    if (ft.length < 30) return;
     const sorted = [...ft].sort((a, b) => a - b), p75 = sorted[Math.floor(sorted.length * 0.75)];
+    if (p75 > 40 && S.quality <= 0.3) { fallback('slow device'); return; }   // still slow at the lowest setting: the poster
     if (p75 > 24 && S.quality > 0.3) { S.quality = Math.max(0.3, S.quality * 0.7); scene.setQuality(S.quality); if (S.quality < 0.6 && dpr > 1) { dpr = 1; resize(); } ft.length = 0; }
   }
   function resize() {
@@ -162,7 +171,7 @@ function boot() {
       return {
         mode: S.mode, reason: S.reason, view: S.view, room: S.room, T: S.T, t: +S.t.toFixed(4), levelDb: +levelDb(S.t, S.T).toFixed(2),
         paused: S.paused, running: S.running, frames: S.frames, station: S.station + 1, rail: +S.rail.toFixed(3), model: S.model, slow: SLOW,
-        quality: +S.quality.toFixed(2), dpr, frameMs: s.length ? { p50: +s[Math.floor(s.length * 0.5)].toFixed(1), p95: +s[Math.floor(s.length * 0.95)].toFixed(1), n: s.length } : null,
+        quality: +S.quality.toFixed(2), dpr, frameScale, frameMs: s.length ? { p50: +s[Math.floor(s.length * 0.5)].toFixed(1), p95: +s[Math.floor(s.length * 0.95)].toFixed(1), n: s.length } : null,
         scene: scene ? scene.info : null, yaw: +orbit.yaw.toFixed(3), pitch: +orbit.pitch.toFixed(3),
       };
     },
@@ -178,8 +187,11 @@ function boot() {
     b.addEventListener('click', () => {
       const target = document.getElementById(b.dataset.proxy);
       if (target) target.click();
-      const main = document.querySelector('main');
-      if (main) { if (!main.hasAttribute('tabindex')) main.setAttribute('tabindex', '-1'); main.scrollIntoView({ block: 'start' }); try { main.focus({ preventScroll: true }); } catch (e) { /* older browsers */ } }
+      const main = document.querySelector('main'), a = document.activeElement;   // keep the focus the tool itself chose
+      if (main) {
+        main.scrollIntoView({ block: 'start' });
+        if (!a || a === document.body || stage.contains(a)) { if (!main.hasAttribute('tabindex')) main.setAttribute('tabindex', '-1'); try { main.focus({ preventScroll: true }); } catch (e) { /* older browsers */ } }
+      }
     });
   }
 
@@ -247,15 +259,25 @@ function boot() {
   S.station = -1; setStation(0); placeLabels();
 
   // ask for a context on a throwaway canvas first, so a machine without WebGL 2 never downloads the 3D code
+  // (a software or blocklisted GPU counts as none; ?debug&softgl lets a test machine through)
   let noGL = q.has('nogl') || !window.WebGL2RenderingContext;
   if (!noGL) {
     try {
-      const probe = document.createElement('canvas').getContext('webgl2');
+      const probe = document.createElement('canvas').getContext('webgl2', { failIfMajorPerformanceCaveat: !(debug && q.has('softgl')) });
       if (!probe) noGL = true; else { const lose = probe.getExtension('WEBGL_lose_context'); if (lose) lose.loseContext(); }
     } catch (e) { noGL = true; }
   }
+  // three r185 uses class static blocks (Safari 16.4 and later). An older engine keeps the poster and skips the download.
+  if (!noGL) { try { new Function('class A{static{}}'); } catch (e) { noGL = true; } }
   if (mqReduce.matches) { S.reason = 'reduced motion'; return; }
   if (noGL) { S.reason = 'no WebGL'; return; }
+  // the 3D is about 900 KB of decoration: a metered or slow link, or a low-memory device, keeps the poster
+  try {
+    const c = navigator.connection;
+    if (c && c.saveData) { S.reason = 'save data'; return; }
+    if (c && /2g|3g/.test(c.effectiveType || '')) { S.reason = 'slow network'; return; }
+    if ((navigator.deviceMemory || 8) <= 2) { S.reason = 'low memory'; return; }
+  } catch (e) { S.reason = 'device check error'; return; }
   S.reason = 'loading';
   goLive().catch((e) => fallback('load error: ' + (e && e.message ? e.message : e)));
 
@@ -268,9 +290,17 @@ function boot() {
       if (!j) return;
       for (const k of ['hero', 's2', 's3']) if (j[k] && Array.isArray(j[k].pos) && Array.isArray(j[k].look)) cams[k] = { pos: j[k].pos.map(Number), look: j[k].look.map(Number), fov: +j[k].fov || 50 };
     }).catch(() => { /* the numbers from the design stand */ });
+    // the heavy steps wait while the Start screen is hidden, so they never land on the setup screen or a recording
+    // (an error here rejects goLive, and the poster stays)
+    const shown = () => (stage.hidden ? new Promise((r) => {
+      const mo = new MutationObserver(() => { if (!stage.hidden) { mo.disconnect(); r(); } });
+      mo.observe(stage, { attributes: true, attributeFilter: ['hidden'] });
+    }) : Promise.resolve());
+    await shown();
     const { createScene } = await import('./scene.js');
     canvas.addEventListener('webglcontextlost', (e) => { e.preventDefault(); fallback('context lost'); });
     scene = await createScene({ canvas, phone, order });
+    await shown();
     const [, gotModel] = await Promise.all([camsReady, q.has('box') ? false : scene.loadRoom(asset('classroom.glb'))]);
     S.model = !!gotModel;
     if (posterImg && !posterImg.complete) await Promise.race([new Promise((r) => { posterImg.addEventListener('load', r, { once: true }); posterImg.addEventListener('error', r, { once: true }); }), new Promise((r) => setTimeout(r, 1500))]);
@@ -280,10 +310,12 @@ function boot() {
     const wantOverlay = q.has('overlay') || stage.dataset.view === 'overlay';
     S.view = wantOverlay && posterOk ? 'overlay' : gotModel || !posterOk || q.has('box') ? 'room' : 'overlay';
     scene.setMode(S.view);
+    await shown();
     measure(); scene.setSize(box.w, box.h, dpr);
     S.t = S.paused ? 0.02 : 0; S.hold = 0;
     cam = camAt(0);
     await scene.compile();
+    await shown();
     for (let i = 0; i < 2; i++) { await new Promise((r) => requestAnimationFrame(r)); scene.render(cam, S.t, S.T); }
     if (scene.renderer.getContext().isContextLost()) throw new Error('context lost');
     // hand-off: the canvas fades in over the poster at the same framing, only now that a frame exists

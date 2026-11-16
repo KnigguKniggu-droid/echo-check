@@ -1,6 +1,7 @@
-/* Chalk strokes: wobbly 2.5px accent line, drawn left to right. */
-button.secondary{position:relative}
-button.secondary::after{
+/* Chalk strokes: wobbly 2.5px accent line, drawn left to right.
+   Not on the sample-room rows: their ::after is the arrow (index.html). */
+button.secondary:not([data-sample]){position:relative}
+button.secondary:not([data-sample])::after{
   content:"";position:absolute;left:12%;right:12%;bottom:3px;height:6px;pointer-events:none;
   background:var(--c-accent,#F48067);
   -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 6' preserveAspectRatio='none'%3E%3Cpath d='M1 3.6C18 1.8 32 4.4 50 3S82 2 99 3.2' fill='none' stroke='%23000' stroke-width='2.5' stroke-linecap='round' vector-effect='non-scaling-stroke'/%3E%3C/svg%3E") center/100% 100% no-repeat;
@@ -8,7 +9,7 @@ button.secondary::after{
   clip-path:inset(0 0 0 0);
 }
 @keyframes chalk-draw{from{clip-path:inset(0 100% 0 0)}to{clip-path:inset(0 0 0 0)}}
-button.secondary:hover:not(:disabled)::after,button.secondary:focus-visible::after{animation:chalk-draw .45s ease-out}
+button.secondary:not([data-sample]):hover:not(:disabled)::after,button.secondary:not([data-sample]):focus-visible::after{animation:chalk-draw .45s ease-out}
 
 .chalk-mark{position:relative;white-space:nowrap}
 .chalk-mark::after{

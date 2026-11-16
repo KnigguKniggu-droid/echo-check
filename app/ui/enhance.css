@@ -4,7 +4,11 @@
    the page reads and works the same if enhance.js never runs.
    Nothing here loads from another site.
    ============================================================= */
-@import "./vendor/lenis/lenis.css";
+
+/* ---------- Lenis base rules ----------
+   Copied from ./vendor/lenis/lenis.css (MIT, see ./vendor/lenis/LICENSE)
+   so the page does not wait for a second stylesheet before first paint. */
+html.lenis,html.lenis body{height:auto}.lenis:not(.lenis-autoToggle).lenis-stopped{overflow:clip}.lenis.lenis-smooth [data-lenis-prevent]{overscroll-behavior:contain}.lenis.lenis-smooth iframe{pointer-events:none}.lenis.lenis-autoToggle{transition-property:overflow;transition-duration:1ms;transition-behavior:allow-discrete}
 
 /* ---------- rise in when scrolled to ----------
    The hidden-before state exists only after enhance.js has put

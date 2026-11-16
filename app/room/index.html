@@ -18,6 +18,16 @@ body{margin:0;background:var(--c-ground);color:var(--c-ink);font:16px/1.5 system
 <body>
 <!-- STAGE START -->
 <section id="stage" class="stage" data-element="hero-room" aria-labelledby="stage-display">
+  <header class="stage-hero">
+    <h1><svg aria-hidden="true" width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round"><circle cx="9" cy="14" r="2.5" fill="var(--accent)" stroke="none"/><path d="M14 9a7 7 0 0 1 0 10M19 5a13 13 0 0 1 0 18"/></svg>Echo Check+</h1>
+    <p class="stage-display" id="stage-display">How long does your classroom echo?</p>
+    <p class="lede">A free room echo check for classrooms. In about 2 minutes it estimates the echo time at one seat, compares it with the US classroom limit, and says who to ask next. If the claps are not clean enough, it gives no verdict. <strong>The audio never leaves this device.</strong></p>
+    <div class="stage-cta">
+      <button type="button" class="stage-btn stage-btn--fill" data-proxy="go-check">Check a room</button>
+      <button type="button" class="stage-btn stage-btn--text" data-proxy="go-samples">Try a sample room</button>
+    </div>
+    <p class="stage-caption" id="stage-note">Illustration: a box-shaped room of 30 × 25 × 10 ft (about 9 × 7.6 × 3 m) with the echo time you pick (0.45 s or 1.1 s). When it plays, it runs about <span data-stage="slow">60</span> times slower than real time. It is a picture of the idea, not a measurement of any room.</p>
+  </header>
   <div class="stage-pin">
     <div class="stage-media">
       <picture class="stage-poster" data-element="poster">
@@ -26,25 +36,25 @@ body{margin:0;background:var(--c-ground);color:var(--c-ink);font:16px/1.5 system
         <source media="(max-width:1200px)" type="image/webp" srcset="assets/poster-hero-1200.webp">
         <source media="(max-width:1200px)" srcset="assets/poster-hero-1200.jpg">
         <source type="image/webp" srcset="assets/poster-hero.webp">
-        <img src="assets/poster-hero.jpg" alt="An empty classroom at dusk, seen from the back corner: rows of desks, a slate board and tall windows." fetchpriority="high" decoding="async">
+        <img src="assets/poster-hero.jpg" alt="A computer-rendered empty classroom at dusk, seen from the back corner: rows of desks, a slate board and tall windows." fetchpriority="high" decoding="async">
       </picture>
       <picture><source type="image/webp" srcset="assets/still-s2.webp"><img class="stage-still" data-station="2" src="assets/still-s2.jpg" alt="" loading="lazy" decoding="async" data-element="fallback-stills"></picture>
       <picture><source type="image/webp" srcset="assets/still-s3.webp"><img class="stage-still" data-station="3" src="assets/still-s3.jpg" alt="" loading="lazy" decoding="async"></picture>
       <canvas class="stage-canvas" data-element="sound-front" aria-hidden="true"></canvas>
-      <div class="stage-labels" data-element="surface-labels">
+      <div class="stage-labels" data-element="surface-labels" aria-hidden="true">
         <p class="stage-label" data-at="clap"><i aria-hidden="true"></i><span>The clap</span></p>
         <p class="stage-label" data-at="reflections"><i aria-hidden="true"></i><span>First reflections</span></p>
         <p class="stage-label" data-at="mic"><i aria-hidden="true"></i><span>The laptop microphone</span></p>
       </div>
     </div>
     <div class="stage-hud">
-      <fieldset class="stage-switch" data-element="room-switch">
-        <legend>Room</legend>
+      <fieldset class="stage-switch" data-element="room-switch" aria-describedby="stage-note">
+        <legend>Example room (illustration)</legend>
         <label><input type="radio" name="stage-room" value="treated" checked><span>Treated · 0.45 s</span></label>
         <label><input type="radio" name="stage-room" value="echoey"><span>Echoey · 1.1 s</span></label>
       </fieldset>
       <figure class="stage-chart" data-element="decay-chart">
-        <svg viewBox="0 0 200 96" role="img" aria-label="Sound level falling after a clap. In the treated room it is 60 dB down after 0.45 seconds; in the echoey room, after 1.1 seconds.">
+        <svg viewBox="0 0 200 96" role="img" aria-describedby="stage-note" aria-label="Illustration, not a measurement: sound level falling after a clap. In the treated example room it is 60 dB down after 0.45 seconds; in the echoey example room, after 1.1 seconds.">
           <g aria-hidden="true">
             <text class="c-word" x="8" y="10">Level</text>
             <text class="c-word" x="196" y="73" text-anchor="end">Time</text>
@@ -64,20 +74,10 @@ body{margin:0;background:var(--c-ground);color:var(--c-ink);font:16px/1.5 system
     </div>
   </div>
   <div class="stage-flow">
-    <header class="stage-hero">
-      <h1><svg aria-hidden="true" width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round"><circle cx="9" cy="14" r="2.5" fill="var(--accent)" stroke="none"/><path d="M14 9a7 7 0 0 1 0 10M19 5a13 13 0 0 1 0 18"/></svg>Echo Check+</h1>
-      <p class="stage-display" id="stage-display">How long does your classroom echo?</p>
-      <p class="lede">A free room echo check for classrooms. In about 2 minutes it shows whether echo at a student's seat is likely a problem, and who to ask next. <strong>The audio never leaves this device.</strong></p>
-      <div class="stage-cta">
-        <button type="button" class="stage-btn stage-btn--fill" data-proxy="go-check">Check a room</button>
-        <button type="button" class="stage-btn stage-btn--text" data-proxy="go-samples">Try a sample room</button>
-      </div>
-      <p class="stage-caption">Illustration: a box-shaped room of 30 × 25 × 10 ft with the same echo time, slowed down about <span data-stage="slow">60</span> times. It is a picture of the idea, not a measurement of any room.</p>
-    </header>
     <ol class="stage-stations" data-element="camera-rail">
       <li><p><strong>One clap.</strong> The sound leaves the front of the room in every direction.</p></li>
       <li><p><strong>The room answers.</strong> Walls, floor and ceiling send it back, each bounce a little later and a little weaker.</p></li>
-      <li><p><strong>The echo time is how long that takes to fade.</strong> The US classroom standard asks for 0.6 s or less in most classrooms.</p></li>
+      <li><p><strong>The echo time is how long that takes to fade.</strong> The US classroom standard asks for 0.6 s or less in an empty, furnished classroom up to 10,000 cubic feet (0.7 s from 10,000 to 20,000).</p></li>
     </ol>
   </div>
 </section>

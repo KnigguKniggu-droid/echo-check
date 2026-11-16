@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Echo Check+</title>
-<meta name="description" content="Free room echo check for classrooms. Clap four times, get the echo time in three bands against the ANSI/ASA S12.60 limit. Audio stays on this device.">
+<meta name="description" content="Free room echo check for classrooms. Clap four times, get an estimate of the echo time in three bands against the ANSI/ASA S12.60 limit, or no verdict when the recording is not clean enough. Audio stays on this device.">
 <meta name="theme-color" content="#f5f3ee" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#111922" media="(prefers-color-scheme: dark)">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 28 28'%3E%3Crect width='28' height='28' rx='6' fill='%231e2f42'/%3E%3Cg transform='translate(2.6 2.5) scale(.82)' fill='none' stroke='%23f2b632' stroke-width='2.8' stroke-linecap='round'%3E%3Ccircle cx='9' cy='14' r='2.6' fill='%23f2b632' stroke='none'/%3E%3Cpath d='M14 9a7 7 0 0 1 0 10M19 5a13 13 0 0 1 0 18'/%3E%3C/g%3E%3C/svg%3E">
@@ -258,6 +258,10 @@ main:focus{outline:none}
 @media (max-width:480px){td.num{white-space:nowrap}}
 #stage{--c-ground:#f5f3ee;--c-ink:#16212d;--c-base:#1e2f42;--c-on-base:#f5f3ee;--c-accent:#f2b632;--c-muted:#566170;--c-line:#d8d4ca;--c-card:#fbfaf7}
 @media screen and (prefers-color-scheme:dark){#measure :focus-visible{outline-color:var(--c-on-base)}}
+/* The tool screens have their own h1 for screen readers; while the stage shows, its h1 is the page's h1. */
+#stage:not([hidden])~main .tool-h1{display:none}
+/* Windows High Contrast: the picked unit keeps a visible fill. */
+@media (forced-colors:active){.seg label:has(input:checked){forced-color-adjust:none;background:Highlight;color:HighlightText}}
 body:has(>main>#start.hidden)>#stage{display:none!important}
 </style>
 <link rel="stylesheet" href="room/stage.css">
@@ -268,6 +272,16 @@ body:has(>main>#start.hidden)>#stage{display:none!important}
 <body>
 <!-- STAGE START -->
 <section id="stage" class="stage" data-element="hero-room" aria-labelledby="stage-display">
+  <header class="stage-hero">
+    <h1><svg aria-hidden="true" width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round"><circle cx="9" cy="14" r="2.5" fill="var(--accent)" stroke="none"/><path d="M14 9a7 7 0 0 1 0 10M19 5a13 13 0 0 1 0 18"/></svg>Echo Check+</h1>
+    <p class="stage-display" id="stage-display">How long does your classroom echo?</p>
+    <p class="lede">A free room echo check for classrooms. In about 2 minutes it estimates the echo time at one seat, compares it with the US classroom limit, and says who to ask next. If the claps are not clean enough, it gives no verdict. <strong>The audio never leaves this device.</strong></p>
+    <div class="stage-cta">
+      <button type="button" class="stage-btn stage-btn--fill" data-proxy="go-check">Check a room</button>
+      <button type="button" class="stage-btn stage-btn--text" data-proxy="go-samples">Try a sample room</button>
+    </div>
+    <p class="stage-caption" id="stage-note">Illustration: a box-shaped room of 30 × 25 × 10 ft (about 9 × 7.6 × 3 m) with the echo time you pick (0.45 s or 1.1 s). When it plays, it runs about <span data-stage="slow">60</span> times slower than real time. It is a picture of the idea, not a measurement of any room.</p>
+  </header>
   <div class="stage-pin">
     <div class="stage-media">
       <picture class="stage-poster" data-element="poster">
@@ -276,25 +290,25 @@ body:has(>main>#start.hidden)>#stage{display:none!important}
         <source media="(max-width:1200px)" type="image/webp" srcset="room/assets/poster-hero-1200.webp">
         <source media="(max-width:1200px)" srcset="room/assets/poster-hero-1200.jpg">
         <source type="image/webp" srcset="room/assets/poster-hero.webp">
-        <img src="room/assets/poster-hero.jpg" alt="An empty classroom at dusk, seen from the back corner: rows of desks, a slate board and tall windows." fetchpriority="high" decoding="async">
+        <img src="room/assets/poster-hero.jpg" alt="A computer-rendered empty classroom at dusk, seen from the back corner: rows of desks, a slate board and tall windows." fetchpriority="high" decoding="async">
       </picture>
       <picture><source type="image/webp" srcset="room/assets/still-s2.webp"><img class="stage-still" data-station="2" src="room/assets/still-s2.jpg" alt="" loading="lazy" decoding="async" data-element="fallback-stills"></picture>
       <picture><source type="image/webp" srcset="room/assets/still-s3.webp"><img class="stage-still" data-station="3" src="room/assets/still-s3.jpg" alt="" loading="lazy" decoding="async"></picture>
       <canvas class="stage-canvas" data-element="sound-front" aria-hidden="true"></canvas>
-      <div class="stage-labels" data-element="surface-labels">
+      <div class="stage-labels" data-element="surface-labels" aria-hidden="true">
         <p class="stage-label" data-at="clap"><i aria-hidden="true"></i><span>The clap</span></p>
         <p class="stage-label" data-at="reflections"><i aria-hidden="true"></i><span>First reflections</span></p>
         <p class="stage-label" data-at="mic"><i aria-hidden="true"></i><span>The laptop microphone</span></p>
       </div>
     </div>
     <div class="stage-hud">
-      <fieldset class="stage-switch" data-element="room-switch">
-        <legend>Room</legend>
+      <fieldset class="stage-switch" data-element="room-switch" aria-describedby="stage-note">
+        <legend>Example room (illustration)</legend>
         <label><input type="radio" name="stage-room" value="treated" checked><span>Treated · 0.45 s</span></label>
         <label><input type="radio" name="stage-room" value="echoey"><span>Echoey · 1.1 s</span></label>
       </fieldset>
       <figure class="stage-chart" data-element="decay-chart">
-        <svg viewBox="0 0 200 96" role="img" aria-label="Sound level falling after a clap. In the treated room it is 60 dB down after 0.45 seconds; in the echoey room, after 1.1 seconds.">
+        <svg viewBox="0 0 200 96" role="img" aria-describedby="stage-note" aria-label="Illustration, not a measurement: sound level falling after a clap. In the treated example room it is 60 dB down after 0.45 seconds; in the echoey example room, after 1.1 seconds.">
           <g aria-hidden="true">
             <text class="c-word" x="8" y="10">Level</text>
             <text class="c-word" x="196" y="73" text-anchor="end">Time</text>
@@ -314,30 +328,21 @@ body:has(>main>#start.hidden)>#stage{display:none!important}
     </div>
   </div>
   <div class="stage-flow">
-    <header class="stage-hero">
-      <h1><svg aria-hidden="true" width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round"><circle cx="9" cy="14" r="2.5" fill="var(--accent)" stroke="none"/><path d="M14 9a7 7 0 0 1 0 10M19 5a13 13 0 0 1 0 18"/></svg>Echo Check+</h1>
-      <p class="stage-display" id="stage-display">How long does your classroom echo?</p>
-      <p class="lede">A free room echo check for classrooms. In about 2 minutes it shows whether echo at a student's seat is likely a problem, and who to ask next. <strong>The audio never leaves this device.</strong></p>
-      <div class="stage-cta">
-        <button type="button" class="stage-btn stage-btn--fill" data-proxy="go-check">Check a room</button>
-        <button type="button" class="stage-btn stage-btn--text" data-proxy="go-samples">Try a sample room</button>
-      </div>
-      <p class="stage-caption">Illustration: a box-shaped room of 30 × 25 × 10 ft with the same echo time, slowed down about <span data-stage="slow">60</span> times. It is a picture of the idea, not a measurement of any room.</p>
-    </header>
     <ol class="stage-stations" data-element="camera-rail">
       <li><p><strong>One clap.</strong> The sound leaves the front of the room in every direction.</p></li>
       <li><p><strong>The room answers.</strong> Walls, floor and ceiling send it back, each bounce a little later and a little weaker.</p></li>
-      <li><p><strong>The echo time is how long that takes to fade.</strong> The US classroom standard asks for 0.6 s or less in most classrooms.</p></li>
+      <li><p><strong>The echo time is how long that takes to fade.</strong> The US classroom standard asks for 0.6 s or less in an empty, furnished classroom up to 10,000 cubic feet (0.7 s from 10,000 to 20,000).</p></li>
     </ol>
   </div>
 </section>
 <!-- STAGE END -->
 <main>
+  <h1 class="sr-only tool-h1">Echo Check+</h1>
   <section id="start" class="card" aria-labelledby="start-h">
     <h2 id="start-h" data-reveal>Start</h2>
     <div class="start-top" data-reveal>
       <div class="start-copy">
-        <p class="lead">You need: a laptop, tablet or phone with a microphone, the rough room size, and 2 minutes with the room empty and quiet.</p>
+        <p class="lead">You need: Chrome on a laptop with a microphone, the rough room size, and 2 minutes with the room empty and quiet. An iPhone, iPad or Android device also works, but the page marks its result as less reliable.</p>
         <div class="row actions">
           <button id="go-check"><span class="roll"><span>Check a room</span><span aria-hidden="true">Takes about 2 minutes</span></span></button>
           <button id="go-samples" class="secondary"><span class="roll"><span>Try a sample room</span><span aria-hidden="true">No microphone needed</span></span></button>
@@ -378,7 +383,7 @@ body:has(>main>#start.hidden)>#stage{display:none!important}
   </section>
 
   <section id="room" class="card" aria-labelledby="room-h">
-    <h2 id="room-h" data-reveal><span class="n">1.</span> Room size</h2>
+    <h2 id="room-h" tabindex="-1" data-reveal><span class="n">1.</span> Room size</h2>
     <p data-reveal>The US classroom limit depends on the room volume (ANSI/ASA S12.60-2010 Part 1).</p>
     <div class="room-layout" data-reveal>
       <div class="room-fields">
@@ -403,12 +408,12 @@ body:has(>main>#start.hidden)>#stage{display:none!important}
       <li><strong>Put this device on a student desk about 3–5 m (10–16 ft) from where you will clap,</strong> for example in the second or third row. Seats farther away often give no result unless the room is very quiet; seats closer than 3 m (10 ft) can miss part of the echo. Keep the microphone uncovered. Point the screen toward the front so you can see the big prompts.</li>
       <li><strong>Turn off microphone effects</strong> for this device: <span id="os-steps"></span></li>
       <li><strong>Close other tabs and apps</strong> that use the microphone (video calls, voice assistants). If another tab holds the microphone with processing on, the browser can reuse that processed sound.</li>
-      <li><strong>Keep the room empty and quiet.</strong> Nobody talks during the check. Close the door and windows. Switch off fans and the projector. If you are allowed to, pause the ventilation for the check and turn it back on afterwards: a quiet room is the most important condition for a result (in one US study of 164 empty classrooms, rooms were about 5 dB louder with the ventilation on).</li>
+      <li><strong>Keep the room empty and quiet.</strong> Nobody talks during the check. Close the door and windows. Switch off fans and the projector. If you are allowed to, pause the ventilation for the check and turn it back on afterwards: a quiet room is the most important condition for a result (in one US study of 164 classrooms, empty rooms were about 5 dB louder with the ventilation on).</li>
     </ol>
     <p><label for="hvac"><strong>Ventilation during the check</strong> (saved with the result):</label>
       <select id="hvac"><option value="unknown">Not sure</option><option value="off">Paused / off</option><option value="on">Running</option></select></p>
     <p><strong>Why:</strong> the claps show how long sound keeps echoing in the room. The counting shows how far a teaching voice stands above the room's background noise at this seat.</p>
-    <p><strong>What you will do (45 s; the counter on the next screen counts down):</strong> press Start and walk quietly to the front. At about <strong>36</strong> on the counter, the page counts you in: "Clap 1 in 3… 2… 1… CLAP NOW". It does this 4 times, 4 s apart. Clap each time with cupped hands, as loud as you comfortably can (practise a few loud claps first: louder claps give a result more often). Stay quiet between claps. From <strong>15</strong> to <strong>5</strong> on the counter, count slowly from 1 to 20 in your normal teaching voice, and stop when the page says "Stop talking", even if you have not reached 20. The page stops by itself. It plays no sound.</p>
+    <p><strong>What you will do (45 s; the counter on the next screen counts down):</strong> press Start and walk quietly to the front. At about <strong>36</strong> on the counter, the page counts you in: "Clap 1 of 4 in 3…", then 2 and 1, then "CLAP NOW (1 of 4)". It does this 4 times, 4 s apart. Clap each time with cupped hands, as loud as you comfortably can (practise a few loud claps first: louder claps give a result more often). Stay quiet between claps. From <strong>15</strong> to <strong>5</strong> on the counter, count slowly from 1 to 20 in your normal teaching voice, and stop when the page says "Stop talking", even if you have not reached 20. The page stops by itself. It plays no sound.</p>
     <div class="row"><button id="rec-start">Start recording (45 s)</button><button id="setup-back" class="secondary">Back</button></div>
     <div id="setup-msg" class="msg hidden" role="alert"></div>
   </section>
@@ -458,7 +463,7 @@ body:has(>main>#start.hidden)>#stage{display:none!important}
     </div>
     <div class="card">
       <h2>Echo time (T20)</h2>
-      <p class="small">Echo time is how long a sound takes to fade away in the room (the time for a 60 dB drop, estimated from the first 20 dB of the fade). Shorter is better for hearing speech. The US classroom standard asks for 0.6 s or less in most classrooms.</p>
+      <p class="small">Echo time is how long a sound takes to fade away in the room (the time for a 60 dB drop, estimated from the part of the fade between 5 and 25 dB down). Shorter is better for hearing speech. The US classroom standard, which is voluntary unless a state or district adopts it, asks for 0.6 s or less in an empty, furnished classroom up to 10,000 cubic feet (0.7 s from 10,000 to 20,000).</p>
       <div id="echo"></div>
     </div>
     <div class="card">
@@ -473,15 +478,16 @@ body:has(>main>#start.hidden)>#stage{display:none!important}
       <h2>Limitations</h2>
       <ul class="list">
         <li>This is an estimate from hand claps at one seat. It is not a compliance measurement. Only a proper measurement in the empty, furnished room at several positions can show compliance with ANSI/ASA S12.60.</li>
+        <li><strong>Tested mostly on simulated claps.</strong> The only real claps so far come from one home test on one device. It has not been tested with real claps in a classroom, in browsers other than Chrome, or in occupied rooms.</li>
         <li><strong>This check cannot measure background noise</strong> against the 35 dBA limit in S12.60. In many classrooms, noise from heating, ventilation or corridors is the bigger problem.</li>
         <li><strong>For a student with hearing loss, the target is stricter.</strong> S12.60-2010 also asks that classrooms of 10,000 cubic feet or less be easy to adapt to 0.3 s for students with hearing loss. This check compares only with the 0.6 s or 0.7 s limit.</li>
-        <li><strong>A pass is weak evidence.</strong> It never means a student has full access, and it must never be used to deny accommodations. Distance, seeing the speaker's face and the student's own hearing still matter.</li>
+        <li><strong>An "Under the limit" result is weak evidence.</strong> It never means a student has full access, and it must never be used to deny accommodations. Distance, seeing the speaker's face and the student's own hearing still matter.</li>
         <li>It says nothing about anyone's hearing. It is not a clinical assessment and does not replace a Functional Listening Evaluation or an educational audiologist's review.</li>
         <li>The page can read only the microphone settings the browser reports. It cannot read operating-system effects.</li>
       </ul>
     </div>
     <div class="row noprint">
-      <button id="again">Measure again</button>
+      <button id="again">Check again</button>
       <button id="print" class="secondary">Print or save as PDF</button>
       <button id="dl-json" class="secondary">Download result (JSON)</button>
       <button id="dl-wav" class="secondary hidden">Save recording (WAV)</button>
@@ -498,8 +504,13 @@ body:has(>main>#start.hidden)>#stage{display:none!important}
 <script>
 /* Stage glue that must not wait for the 3D code: the stage shows only with the Start card, and its two buttons stand in for the Start card's own. */
 (function(){var s=document.getElementById('stage'),st=document.getElementById('start'),m=document.querySelector('main');if(!s||!st)return;
-function sync(){var h=st.classList.contains('hidden');if(s.hidden===h)return;s.hidden=h;window.scrollTo(0,0)}
+/* When a screen change hides the button that had focus, focus goes to a sensible place, not to <body>. */
+function lost(){var a=document.activeElement;return !a||a===document.body||!a.getClientRects().length}
+function put(el,o){try{el&&el.focus(o)}catch(x){}}
+function sync(){var h=st.classList.contains('hidden');if(s.hidden===h)return;s.hidden=h;window.scrollTo(0,0);if(!h&&lost())put(s.querySelector('[data-proxy]'),{preventScroll:true})}
 try{new MutationObserver(sync).observe(st,{attributes:true,attributeFilter:['class']})}catch(e){}sync();
+var su=document.getElementById('setup'),rh=document.getElementById('room-h');
+if(su&&rh)try{new MutationObserver(function(){if(!su.classList.contains('hidden')&&lost())put(rh)}).observe(su,{attributes:true,attributeFilter:['class']})}catch(e){}
 s.addEventListener('click',function(e){var b=e.target.closest?e.target.closest('[data-proxy]'):null;if(!b)return;var t=document.getElementById(b.getAttribute('data-proxy'));if(t)t.click();var a=document.activeElement;if(m){m.scrollIntoView({block:'start'});if(!a||a===document.body||s.contains(a)){m.setAttribute('tabindex','-1');try{m.focus({preventScroll:true})}catch(x){}}}});
 s.setAttribute('data-proxies','page')})();
 </script>

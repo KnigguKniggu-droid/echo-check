@@ -81,15 +81,22 @@
 #stage .stage-controls[hidden]{display:none}
 #stage .stage-controls .stage-btn{font-size:.9375rem;padding:10px 14px;min-width:6.4em}
 
-/* ---------- the words that scroll over the pinned picture ---------- */
-#stage .stage-flow{position:relative;z-index:1;margin-top:calc(-1 * max(100vh,620px));margin-top:calc(-1 * max(100svh,620px));pointer-events:none}
-#stage .stage-hero{height:100vh;height:100svh;min-height:620px;display:flex;flex-direction:column;align-items:flex-start;
+/* ---------- the words that scroll over the pinned picture ----------
+   The hero header is the first child of #stage, so it is read and tabbed first (WCAG 1.3.2, 2.4.3).
+   It lies over the first screen of the pinned picture; the stations follow the picture's first screen. */
+#stage .stage-flow{position:relative;z-index:1;pointer-events:none}
+#stage .stage-hero{position:absolute;top:0;left:0;right:0;z-index:1;pointer-events:none;
+  height:100vh;height:100svh;min-height:620px;display:flex;flex-direction:column;align-items:flex-start;
   padding:clamp(18px,2.6vw,34px) var(--s-pad) clamp(18px,2.6vw,36px)}
 #stage .stage-hero>*{pointer-events:auto}
 #stage h1{display:flex;align-items:center;gap:10px;margin:0;font-size:1.25rem;font-weight:600;line-height:1.2;letter-spacing:0;color:var(--s-on)}
 #stage h1 svg{flex:none;width:24px;height:24px;stroke:var(--s-on)}
 #stage h1 svg circle{fill:var(--s-on)}
 #stage .stage-display{margin-top:auto;max-width:17.5ch;font-size:clamp(2.6rem,7.2vw,6.5rem);font-weight:600;font-stretch:100%;line-height:.96;letter-spacing:-.025em;text-wrap:balance}
+/* a soft shadow keeps the big line readable over light parts of the picture (WCAG 1.4.3, large text) */
+#stage .stage-display{text-shadow:0 0 .3em rgba(22,33,45,.6)}
+/* at 200 % zoom the line's box reaches the Clap again / Pause buttons: clicks pass through it (WCAG 1.4.4) */
+@media (min-width:701px){#stage .stage-display{pointer-events:none}}
 #stage .lede{margin:clamp(14px,1.6vw,22px) 0 0;max-width:min(58ch,calc(100% - 300px));font-size:1.0625rem;line-height:1.5;color:var(--s-soft)}
 #stage .lede strong{color:var(--s-on);font-weight:600}
 #stage .stage-cta{display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;margin-top:clamp(16px,1.8vw,24px)}
@@ -129,6 +136,10 @@
   #stage .stage-controls{bottom:auto;top:calc(clamp(16px,2.4vw,30px) + 268px)}
 }
 @media (prefers-reduced-motion:reduce){
-  #stage .stage-label,#stage .stage-btn,#stage .stage-switch span{transition-duration:.01s}
+  #stage .stage-label,#stage .stage-btn,#stage .stage-switch span,#stage .stage-still{transition-duration:.01s}
+}
+/* Windows High Contrast: the picked room keeps a visible fill (WCAG 1.4.1, 1.4.11) */
+@media (forced-colors:active){
+  #stage .stage-switch input:checked+span{forced-color-adjust:none;background:Highlight;color:HighlightText;border-color:Highlight}
 }
 @media print{#stage{display:none!important}}
