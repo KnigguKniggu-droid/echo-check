@@ -257,6 +257,8 @@ main:focus{outline:none}
 }
 @media (max-width:480px){td.num{white-space:nowrap}}
 #stage{--c-ground:#f5f3ee;--c-ink:#16212d;--c-base:#1e2f42;--c-on-base:#f5f3ee;--c-accent:#f2b632;--c-muted:#566170;--c-line:#d8d4ca;--c-card:#fbfaf7}
+@media screen and (prefers-color-scheme:dark){#measure :focus-visible{outline-color:var(--c-on-base)}}
+body:has(>main>#start.hidden)>#stage{display:none!important}
 </style>
 <link rel="stylesheet" href="room/stage.css">
 <link rel="stylesheet" href="ui/enhance.css">
@@ -496,9 +498,9 @@ main:focus{outline:none}
 <script>
 /* Stage glue that must not wait for the 3D code: the stage shows only with the Start card, and its two buttons stand in for the Start card's own. */
 (function(){var s=document.getElementById('stage'),st=document.getElementById('start'),m=document.querySelector('main');if(!s||!st)return;
-function sync(){var h=st.classList.contains('hidden');if(s.hidden===h)return;s.hidden=h;if(!h)window.scrollTo(0,0)}
+function sync(){var h=st.classList.contains('hidden');if(s.hidden===h)return;s.hidden=h;window.scrollTo(0,0)}
 try{new MutationObserver(sync).observe(st,{attributes:true,attributeFilter:['class']})}catch(e){}sync();
-s.addEventListener('click',function(e){var b=e.target.closest?e.target.closest('[data-proxy]'):null;if(!b)return;var t=document.getElementById(b.getAttribute('data-proxy'));if(t)t.click();if(m){m.setAttribute('tabindex','-1');m.scrollIntoView({block:'start'});try{m.focus({preventScroll:true})}catch(x){}}});
+s.addEventListener('click',function(e){var b=e.target.closest?e.target.closest('[data-proxy]'):null;if(!b)return;var t=document.getElementById(b.getAttribute('data-proxy'));if(t)t.click();var a=document.activeElement;if(m){m.scrollIntoView({block:'start'});if(!a||a===document.body||s.contains(a)){m.setAttribute('tabindex','-1');try{m.focus({preventScroll:true})}catch(x){}}}});
 s.setAttribute('data-proxies','page')})();
 </script>
 <script type="module">import('./room/main.js').catch(()=>{})</script>

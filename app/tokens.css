@@ -101,6 +101,7 @@
     --c-on-base: #0E211F;
     --c-base-hover: #FFF0BF;
     --c-base-press: #F0D77E;
+    --c-board-muted: #55635F;   /* secondary text on the chalk-yellow recording screen (5.0:1) */
     --c-bar: #9db3cb;
 
     --accent: var(--c-base);

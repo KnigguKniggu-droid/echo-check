@@ -123,6 +123,10 @@ We always give two numbers: **false passes** and the **Incomplete rate** (no ver
 - A one-page printable room report built around the report sentence, reviewed by educational audiologists.
 - A noise check with a calibrated external microphone.
 
+### Changes after the deadline
+
+- **2026-11-15, about 21:45 CST:** two bug fixes found by our own audit of the redesign. In dark mode, the small text on the recording screen now has readable contrast. On Safari and on phones, "Check a room" and "Try a sample room" now land on the right section. The measuring engine, the verdicts and the wording did not change.
+
 ## 7. Feasibility
 
 - **It runs today, for free:** a static web page (GitHub Pages) in Chrome on a laptop. No install, no account, no server, no running cost. Audio is analysed in the browser and never uploaded.
