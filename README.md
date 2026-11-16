@@ -108,7 +108,7 @@ We always give two numbers: **false passes** and the **Incomplete rate** (no ver
 - **Devices and browsers:** real microphones beyond that 1 device are untested. Our browser tests used Chrome.
 - **Operating-system processing:** the page cannot see it (for example Windows Voice Clarity). The page lists the settings and relies on the user to turn them off.
 - **Rooms under the limit:** only the ACE and MIT tests contain them. All 3 HOMULA-RIR and PAN-AR rooms are over the limit.
-- **Two-slope decays:** an engine review found that a fast early decay followed by a slow late one can make T20 read short at lower confidence. The tail guard catches most such cases, not all, so "Under" stays "weak evidence".
+- **Two-slope decays:** an engine review found that a fast early decay followed by a slow late one can make T20 read short at lower confidence. The tail guard removed the 2 simulated false passes per clap set, but in the reviewer's harder test grid it fixed 8 of 17 (9 extreme cases still pass), so "Under" stays "weak evidence".
 - **Seat distance:** the simulated false passes (2 per clap set, before the tail guard) all came from a seat 1.8 m from the clapper; with the guard, 0 in both sets. The page asks for 3–5 m, but it cannot measure the distance.
 - **No answer is common in hard conditions:** far from the clapper or with the ventilation running, the result is often "Incomplete" (HOMULA-RIR: 12 of 50 seat responses gave a verdict at 45 dBA). Incomplete is safe, but it gives no answer.
 - **One seat, empty room:** the AAA guideline uses five positions. Occupied rooms are untested.
