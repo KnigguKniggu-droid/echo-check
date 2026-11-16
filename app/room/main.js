@@ -137,13 +137,13 @@ function boot() {
       scene.render(cam, S.t, S.T);
       S.frames++;
       drawChart(); placeLabels();
-      if (S.frames % 30 === 0) adapt();
+      if (S.frames % 90 === 0) adapt();
     } catch (e) { fallback('render error'); return; }
     if (S.paused && settled) { S.running = false; return; }   // a paused, resting picture needs no more frames
     raf = requestAnimationFrame(frame);
   }
   function adapt() {                                           // fewer grains, then fewer pixels, if frames run long
-    if (ft.length < 30) return;
+    if (ft.length < 60) return;
     const sorted = [...ft].sort((a, b) => a - b), p75 = sorted[Math.floor(sorted.length * 0.75)];
     if (p75 > 24 && S.quality > 0.3) { S.quality = Math.max(0.3, S.quality * 0.7); scene.setQuality(S.quality); if (S.quality < 0.6 && dpr > 1) { dpr = 1; resize(); } ft.length = 0; }
   }
@@ -270,13 +270,6 @@ function boot() {
   if (!noGL) { try { new Function('class A{static{}}'); } catch (e) { noGL = true; } }
   if (mqReduce.matches) { S.reason = 'reduced motion'; return; }
   if (noGL) { S.reason = 'no WebGL'; return; }
-  // the 3D is about 900 KB of decoration: a metered or slow link, or a low-memory device, keeps the poster
-  try {
-    const c = navigator.connection;
-    if (c && c.saveData) { S.reason = 'save data'; return; }
-    if (c && /2g|3g/.test(c.effectiveType || '')) { S.reason = 'slow network'; return; }
-    if ((navigator.deviceMemory || 8) <= 2) { S.reason = 'low memory'; return; }
-  } catch (e) { S.reason = 'device check error'; return; }
   S.reason = 'loading';
   goLive().catch((e) => fallback('load error: ' + (e && e.message ? e.message : e)));
 

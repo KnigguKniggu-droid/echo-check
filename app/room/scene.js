@@ -151,7 +151,7 @@ function boxRoom() {
 }
 
 export async function createScene({ canvas, phone = false, order = 4, quality = 1 }) {
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias: !phone, alpha: true, premultipliedAlpha: true, powerPreference: 'default' });
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: !phone, alpha: true, premultipliedAlpha: true, powerPreference: 'high-performance' });
   if (!renderer.capabilities.isWebGL2) { renderer.dispose(); throw new Error('no WebGL 2'); }
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.NoToneMapping;
