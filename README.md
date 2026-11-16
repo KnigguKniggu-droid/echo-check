@@ -125,7 +125,7 @@ We always give two numbers: **false passes** and the **Incomplete rate** (no ver
 
 ### Changes after the deadline
 
-- **2026-11-15, about 21:45 CST:** two bug fixes found by our own audit of the redesign. In dark mode, the small text on the recording screen now has readable contrast. On Safari and on phones, "Check a room" and "Try a sample room" now land on the right section. The measuring engine, the verdicts and the wording did not change.
+- **2026-11-15, 21:39 CST:** two bug fixes found by our own audit of the redesign. In dark mode, the small text on the recording screen now has readable contrast. On Safari and on phones, "Check a room" and "Try a sample room" now land on the right section. The measuring engine, the verdicts and the wording did not change.
 
 ## 7. Feasibility
 
