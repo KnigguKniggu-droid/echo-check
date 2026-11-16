@@ -72,7 +72,7 @@ The engine is about 615 lines of dependency-free JavaScript (`engine/echo-engine
 
 | Folder | Contents |
 |---|---|
-| `app/` | The web page (`index.html`, `app.js`). No libraries, no build step. |
+| `app/` | The web page (`index.html`, `app.js`); `app/room/` is the 3D first screen (three.js in `app/vendor/`), `app/ui/` the scrolling and chalk details. No build step. |
 | `engine/` | `echo-engine.js` (analysis, trust checks, verdict); `synth.js` (the simulated sample recordings); `cli.js` (checks a WAV file from the command line); `test/` (the 27 tests); `REFERENCE_VALUES.md` (every test result in this README, with method and caveats). |
 | `recorder/` | A test page that records one take and saves it with the settings the browser reports. For device tests. |
 | `version.txt` | Which commit of the team repository is live. |
@@ -161,7 +161,7 @@ Papers and standards behind the rules: ANSI/ASA S12.60-2010 Part 1 (text not rep
 
 ### Built with
 
-JavaScript (no libraries), Web Audio API (AudioWorklet), getUserMedia, GitHub Pages. Testing only: Node.js, Python, NumPy, SciPy, pyrato and pyfar, pyroomacoustics, headless Google Chrome.
+JavaScript. The measuring engine uses no libraries; the 3D first screen uses three.js (MIT) with the meshoptimizer decoder (MIT), smooth scrolling uses Lenis (MIT), and the typeface is Archivo (SIL Open Font License 1.1), Web Audio API (AudioWorklet), getUserMedia, GitHub Pages. Testing only: Node.js, Python, NumPy, SciPy, pyrato and pyfar, pyroomacoustics, headless Google Chrome.
 
 ### Team
 
