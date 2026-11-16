@@ -145,7 +145,6 @@ function boot() {
   function adapt() {                                           // fewer grains, then fewer pixels, if frames run long
     if (ft.length < 30) return;
     const sorted = [...ft].sort((a, b) => a - b), p75 = sorted[Math.floor(sorted.length * 0.75)];
-    if (p75 > 40 && S.quality <= 0.3) { fallback('slow device'); return; }   // still slow at the lowest setting: the poster
     if (p75 > 24 && S.quality > 0.3) { S.quality = Math.max(0.3, S.quality * 0.7); scene.setQuality(S.quality); if (S.quality < 0.6 && dpr > 1) { dpr = 1; resize(); } ft.length = 0; }
   }
   function resize() {
@@ -263,7 +262,7 @@ function boot() {
   let noGL = q.has('nogl') || !window.WebGL2RenderingContext;
   if (!noGL) {
     try {
-      const probe = document.createElement('canvas').getContext('webgl2', { failIfMajorPerformanceCaveat: !(debug && q.has('softgl')) });
+      const probe = document.createElement('canvas').getContext('webgl2');
       if (!probe) noGL = true; else { const lose = probe.getExtension('WEBGL_lose_context'); if (lose) lose.loseContext(); }
     } catch (e) { noGL = true; }
   }
