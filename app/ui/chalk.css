@@ -1,0 +1,33 @@
+/* Chalk strokes: wobbly 2.5px accent line, drawn left to right. */
+button.secondary{position:relative}
+button.secondary::after{
+  content:"";position:absolute;left:12%;right:12%;bottom:3px;height:6px;pointer-events:none;
+  background:var(--c-accent,#F48067);
+  -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 6' preserveAspectRatio='none'%3E%3Cpath d='M1 3.6C18 1.8 32 4.4 50 3S82 2 99 3.2' fill='none' stroke='%23000' stroke-width='2.5' stroke-linecap='round' vector-effect='non-scaling-stroke'/%3E%3C/svg%3E") center/100% 100% no-repeat;
+  mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 6' preserveAspectRatio='none'%3E%3Cpath d='M1 3.6C18 1.8 32 4.4 50 3S82 2 99 3.2' fill='none' stroke='%23000' stroke-width='2.5' stroke-linecap='round' vector-effect='non-scaling-stroke'/%3E%3C/svg%3E") center/100% 100% no-repeat;
+  clip-path:inset(0 0 0 0);
+}
+@keyframes chalk-draw{from{clip-path:inset(0 100% 0 0)}to{clip-path:inset(0 0 0 0)}}
+button.secondary:hover:not(:disabled)::after,button.secondary:focus-visible::after{animation:chalk-draw .45s ease-out}
+
+.chalk-mark{position:relative;white-space:nowrap}
+.chalk-mark::after{
+  content:"";position:absolute;left:0;right:0;bottom:-.18em;height:.3em;pointer-events:none;
+  background:var(--c-accent,#F48067);
+  -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 8' preserveAspectRatio='none'%3E%3Cpath d='M1 5C20 2.5 35 6.5 52 4S85 3 99 5' fill='none' stroke='%23000' stroke-width='2.5' stroke-linecap='round' vector-effect='non-scaling-stroke'/%3E%3C/svg%3E") center/100% 100% no-repeat;
+  mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 8' preserveAspectRatio='none'%3E%3Cpath d='M1 5C20 2.5 35 6.5 52 4S85 3 99 5' fill='none' stroke='%23000' stroke-width='2.5' stroke-linecap='round' vector-effect='non-scaling-stroke'/%3E%3C/svg%3E") center/100% 100% no-repeat;
+  clip-path:inset(0 0 0 0);
+}
+[data-reveal]:not(.is-in) .chalk-mark::after{clip-path:inset(0 100% 0 0)}
+[data-reveal].is-in .chalk-mark::after{animation:chalk-draw .45s ease-out .2s backwards}
+
+.chalk-progress{position:fixed;top:0;left:0;right:0;height:2px;background:var(--c-accent,#F48067);
+  transform:scaleX(0);transform-origin:left;z-index:60;pointer-events:none;transition:opacity .2s}
+.chalk-progress.is-hidden{opacity:0}
+
+@media print{.chalk-progress{display:none!important}}
+@media (prefers-reduced-motion:reduce){
+  button.secondary::after,.chalk-mark::after,[data-reveal].is-in .chalk-mark::after{animation:none!important;transition:none!important}
+  [data-reveal]:not(.is-in) .chalk-mark::after{clip-path:inset(0 0 0 0)}
+  .chalk-progress{transition:none}
+}

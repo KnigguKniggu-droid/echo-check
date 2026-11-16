@@ -21,20 +21,21 @@
   color-scheme: light;
 
   /* ---------- colour roles (light) ---------- */
-  --c-ground: #f5f3ee;        /* acoustic ceiling tile: page ground */
-  --c-ink: #16212d;           /* slate, darkest: text */
-  --c-base: #1e2f42;          /* slate board: hero, filled buttons. Same in both schemes */
-  --c-on-base: #f5f3ee;       /* text on the slate board. Same in both schemes */
-  --c-accent: #f2b632;        /* pencil yellow: the sound front and one highlight per view. Never text on light ground */
-  --c-on-accent: #16212d;     /* text on a pencil-yellow fill */
-  --c-muted: #566170;         /* secondary text */
-  --c-line: #d8d4ca;          /* hairlines */
+  --c-ground: #F4F6F1;        /* acoustic ceiling tile: page ground */
+  --c-ink: #0E211F;           /* slate, darkest: text */
+  --c-base: #112F2C;          /* slate board: hero, filled buttons. Same in both schemes */
+  --c-on-base: #F4F6F1;       /* text on the slate board. Same in both schemes */
+  --c-accent: #F48067;        /* pencil yellow: the sound front and one highlight per view. Never text on light ground */
+  --c-on-accent: #0E211F;     /* text on a pencil-yellow fill */
+  --c-muted: #55635F;         /* secondary text */
+  --c-line: #D5DBD3;          /* hairlines */
   --c-line-strong: #7a828c;   /* field and button outlines (3:1 on ground) */
-  --c-card: #fbfaf7;          /* raised surface: fields, the report sentence */
+  --c-card: #FBFCF9;          /* raised surface: fields, the report sentence */
   --c-board-muted: #c5c9cc;   /* secondary text on the slate board */
-  --c-base-hover: #2d4762;    /* filled button, hover and focus */
-  --c-base-press: #121c28;    /* filled button, pressed */
-  --c-bar: #1e2f42;           /* echo-time bar fill */
+  --c-base-hover: #1B4440;    /* filled button, hover and focus */
+  --c-base-press: #0A1F1D;    /* filled button, pressed */
+  --c-bar: #112F2C;
+  --c-chalk: #FBE6A0;          /* chalk yellow: drawn marks on dark surfaces */           /* echo-time bar fill */
 
   /* ---------- the tool's names, re-pointed ---------- */
   --bg: var(--c-ground);
@@ -47,7 +48,7 @@
   --on-accent: var(--c-on-base);
   --accent-hover: var(--c-base-hover);
   --accent-press: var(--c-base-press);
-  --focus: var(--c-base);
+  --focus: var(--c-ink);
   --bar-fill: var(--c-bar);
 
   /* Verdict colours stay semantic (values unchanged from the audited tool) */
@@ -90,19 +91,23 @@
 @media screen and (prefers-color-scheme: dark) {
   :root {
     color-scheme: dark;
-    --c-ground: #111922;
-    --c-ink: #eef0ee;
-    --c-muted: #a7b1bc;
-    --c-line: #2c3a49;
+    --c-ground: #0C1A18;
+    --c-ink: #EEF2EC;
+    --c-muted: #A3B0AA;
+    --c-line: #25403B;
     --c-line-strong: #6f7e8e;
-    --c-card: #18232f;
+    --c-card: #132623;
+    --c-base: #FBE6A0;
+    --c-on-base: #0E211F;
+    --c-base-hover: #FFF0BF;
+    --c-base-press: #F0D77E;
     --c-bar: #9db3cb;
 
-    --accent: var(--c-accent);
-    --on-accent: var(--c-on-accent);
-    --accent-hover: #f6c95f;
-    --accent-press: #dba220;
-    --focus: var(--c-accent);
+    --accent: var(--c-base);
+    --on-accent: var(--c-on-base);
+    --accent-hover: var(--c-base-hover);
+    --accent-press: var(--c-base-press);
+    --focus: var(--c-ink);
 
     --ok: #81c995;   --ok-bg: #16301f;
     --warn: #fdd663; --warn-bg: #3a3012;

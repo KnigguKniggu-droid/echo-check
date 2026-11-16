@@ -256,9 +256,12 @@ main:focus{outline:none}
   .bar,.bar>*,.verdict,.verdict h2::before,.badge::before{-webkit-print-color-adjust:exact;print-color-adjust:exact}
 }
 @media (max-width:480px){td.num{white-space:nowrap}}
+#stage{--c-ground:#f5f3ee;--c-ink:#16212d;--c-base:#1e2f42;--c-on-base:#f5f3ee;--c-accent:#f2b632;--c-muted:#566170;--c-line:#d8d4ca;--c-card:#fbfaf7}
 </style>
 <link rel="stylesheet" href="room/stage.css">
 <link rel="stylesheet" href="ui/enhance.css">
+<link rel="stylesheet" href="ui/chalk.css">
+<link rel="stylesheet" href="ui/roll.css">
 </head>
 <body>
 <!-- STAGE START -->
@@ -334,8 +337,8 @@ main:focus{outline:none}
       <div class="start-copy">
         <p class="lead">You need: a laptop, tablet or phone with a microphone, the rough room size, and 2 minutes with the room empty and quiet.</p>
         <div class="row actions">
-          <button id="go-check">Check a room</button>
-          <button id="go-samples" class="secondary">Try a sample room</button>
+          <button id="go-check"><span class="roll"><span>Check a room</span><span aria-hidden="true">Takes about 2 minutes</span></span></button>
+          <button id="go-samples" class="secondary"><span class="roll"><span>Try a sample room</span><span aria-hidden="true">No microphone needed</span></span></button>
           <button id="upload-btn" class="secondary">Upload a recording (WAV)</button>
           <input id="upload" type="file" accept=".wav,audio/wav,audio/x-wav" class="hidden">
         </div>
@@ -362,7 +365,7 @@ main:focus{outline:none}
       </svg>
     </div>
     <div class="rules" id="rules" data-reveal>
-      <h3>Built to avoid a false pass</h3>
+      <h3>Built to avoid a <span class="chalk-mark">false pass</span></h3>
       <ul class="list guard">
         <li class="g-block"><strong>Blocked</strong> <span>if the browser reports microphone processing on, or the audio shows clipping or a noise gate.</span></li>
         <li class="g-part"><strong>Incomplete</strong> <span>if the claps are not clean enough. It names the band and says what to change.</span></li>
@@ -500,5 +503,6 @@ s.setAttribute('data-proxies','page')})();
 </script>
 <script type="module">import('./room/main.js').catch(()=>{})</script>
 <script type="module">import('./ui/enhance.js').catch(()=>{})</script>
+<script type="module" src="ui/chalk.js"></script>
 </body>
 </html>
